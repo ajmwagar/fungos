@@ -195,4 +195,3 @@ mod tests {
         assert!(svg.len() < 20_000);
     }
 }
-
