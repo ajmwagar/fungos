@@ -1,0 +1,18 @@
+[Unit]
+Description=fungOS first-contact adapter
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/fungos/first-contact.env
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/fungos-first-contact /etc/fungos/first-contact.env
+RemainAfterExit=yes
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+StateDirectory=fungos
+
+[Install]
+WantedBy=multi-user.target

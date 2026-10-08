@@ -1,0 +1,10 @@
+[Unit]
+Description=Generate fungOS SSH host keys on first boot
+ConditionPathExistsGlob=!/etc/ssh/ssh_host_*_key
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ssh-keygen -A
+RemainAfterExit=yes
+ProtectHome=yes
+PrivateTmp=yes

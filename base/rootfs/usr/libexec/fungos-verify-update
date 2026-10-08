@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+[ "$#" -eq 3 ] || { echo "usage: fungos-verify-update ARTIFACT MANIFEST SIGNATURE" >&2; exit 2; }
+artifact=$1
+manifest=$2
+signature=$3
+for input in "$artifact" "$manifest" "$signature"; do
+  [ -r "$input" ] || { echo "update input is not readable: $input" >&2; exit 1; }
+done
+set -- /usr/lib/fungos/update-verifiers.d/*
+[ "$#" -eq 1 ] && [ -f "$1" ] && [ -x "$1" ] || {
+  echo "exactly one executable update verifier is required" >&2
+  exit 1
+}
+exec "$1" "$artifact" "$manifest" "$signature"

@@ -1,0 +1,12 @@
+# Canvas Linux owns Wayland/KMS; neither Xorg nor Weston is a profile input.
+dbus
+fonts-dejavu-core
+libegl1
+libgbm1
+libgl1-mesa-dri
+libinput10
+libseat1
+libwayland-server0
+libxkbcommon0
+mesa-vulkan-drivers
+xcursor-themes

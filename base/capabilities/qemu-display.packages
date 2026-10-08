@@ -1,0 +1,7 @@
+# Optional QEMU edge runtime; not part of base.capabilities.
+dbus
+fonts-dejavu-core
+libegl1
+libgl1-mesa-dri
+libxkbcommon0
+mesa-vulkan-drivers

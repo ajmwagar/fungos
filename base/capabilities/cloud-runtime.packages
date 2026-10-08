@@ -1,0 +1,9 @@
+# Native tools used by Shroud. First-party executables remain signed packages.
+cpio
+curl
+dnsmasq-base
+dnsmasq-utils
+e2fsprogs
+iptables
+procps
+sudo

@@ -1,0 +1,18 @@
+fungOS first-party source code and documentation are licensed, at your option,
+under either:
+
+  MIT License (LICENSE-MIT)
+  Apache License, Version 2.0 (LICENSE-APACHE)
+
+SPDX-License-Identifier: MIT OR Apache-2.0
+
+Unless you explicitly state otherwise, contributions intentionally submitted
+for inclusion in this repository are provided under these same terms, without
+additional terms or conditions.
+
+This grant covers first-party distribution tooling and integration source. It
+does not relicense Linux, Debian packages, firmware, optional applications, or
+other third-party components included in generated images. Their respective
+licenses remain authoritative. See THIRD-PARTY.md.
+
+Names and logos are not a grant of trademark rights.

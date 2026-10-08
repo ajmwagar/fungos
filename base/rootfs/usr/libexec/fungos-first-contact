@@ -1,0 +1,11 @@
+#!/bin/sh
+set -eu
+
+environment=${1:-}
+[ -r "$environment" ] || { echo "first-contact environment is not readable" >&2; exit 1; }
+set -- /usr/lib/fungos/first-contact.d/*
+[ "$#" -eq 1 ] && [ -f "$1" ] && [ -x "$1" ] || {
+  echo "exactly one executable first-contact adapter is required" >&2
+  exit 1
+}
+exec "$1" "$environment"

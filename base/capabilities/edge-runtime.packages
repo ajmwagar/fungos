@@ -1,0 +1,3 @@
+# First-party Unibus artifacts are installed by signed Mycelium policy.
+# Native runtime dependencies only; no build tools or display server.
+libc6
