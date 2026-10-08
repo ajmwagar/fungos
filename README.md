@@ -1,5 +1,7 @@
 # fungOS
 
+![fungOS mark](brand/fungos.svg)
+
 Debian-based nodes with explicit boot profiles, secure enrollment and trusted
 software delivery. Mycelium manages identity, topology, access and updates;
 optional edge profiles add Unibus and the native Canvas Wayland compositor.
