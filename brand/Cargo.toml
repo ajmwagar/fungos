@@ -1,0 +1,14 @@
+[package]
+name = "fungos-artwork"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[workspace]
+
+[dependencies]
+resvg = { version = "=0.45.1", default-features = false }
+
+[[bin]]
+name = "fungos-svg-render"
+path = "render-svg.rs"

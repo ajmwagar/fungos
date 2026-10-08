@@ -94,6 +94,10 @@ fn write_mark_svg(out: &mut impl Write) -> std::io::Result<()> {
         out,
         r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><title>fungOS</title><rect width="100" height="100" rx="18" fill="#141c18"/>"##
     )?;
+    write_mark_shapes(out)?;
+    writeln!(out, "</svg>")
+}
+fn write_mark_shapes(out: &mut impl Write) -> std::io::Result<()> {
     for (cx, cy, radius, phase) in MARK_SHELVES {
         for level in [1.0, 0.75, 0.5] {
             let mut path = String::new();
@@ -115,10 +119,63 @@ fn write_mark_svg(out: &mut impl Write) -> std::io::Result<()> {
             )?;
         }
     }
-    writeln!(out, "</svg>")
+    Ok(())
+}
+// Original geometric lettering: outlines, not a system-font dependency.
+// Keep the glyphs as paths so launcher rasterization is reproducible everywhere.
+const WORDMARK: [&str; 6] = [
+    "M20 60V14Q20 3 33 3H40M7 24H37",
+    "M7 24V45Q7 60 23 60Q39 60 39 45V24M39 45V60",
+    "M7 60V24M7 38Q7 24 23 24Q39 24 39 38V60",
+    "M40 24V64Q40 78 24 78Q12 78 8 72M40 32Q34 24 22 24Q6 24 6 42Q6 60 22 60Q34 60 40 50",
+    "M24 3C9 3 3 14 3 32C3 50 9 61 24 61C39 61 45 50 45 32C45 14 39 3 24 3Z",
+    "M43 10C34 -1 8 -1 5 16C2 31 23 31 32 35C53 44 45 62 25 62C16 62 7 58 3 52",
+];
+fn write_app_svg(out: &mut impl Write, wide: bool) -> std::io::Result<()> {
+    let (w, h) = if wide { (640, 360) } else { (512, 512) };
+    writeln!(
+        out,
+        r##"<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><title>fungOS</title><rect width="{w}" height="{h}" fill="#141c18"/>"##
+    )?;
+    let mark = if wide {
+        "translate(32 40) scale(2.8)"
+    } else {
+        "translate(106 24) scale(3)"
+    };
+    writeln!(out, r#"<g transform="{mark}">"#)?;
+    write_mark_shapes(out)?;
+    writeln!(out, "</g>")?;
+    let text = if wide {
+        "translate(316 144)"
+    } else {
+        "translate(90 366) scale(1.05)"
+    };
+    writeln!(
+        out,
+        r##"<g transform="{text}" fill="none" stroke="#e5eadd" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">"##
+    )?;
+    for (i, path) in WORDMARK.iter().enumerate() {
+        writeln!(
+            out,
+            r#"<path transform="translate({} 0)" d="{path}"/>"#,
+            i * 52
+        )?;
+    }
+    writeln!(out, "</g></svg>")
 }
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args: Vec<_> = std::env::args().collect();
+    if args.len() == 4 && args[1] == "--app-svg" {
+        let wide = match args[2].as_str() {
+            "tv" => true,
+            "square" => false,
+            _ => return Err("app layout must be tv or square".into()),
+        };
+        let mut out = BufWriter::new(File::create(&args[3])?);
+        write_app_svg(&mut out, wide)?;
+        out.flush()?;
+        return Ok(());
+    }
     if args.len() == 3 && args[1] == "--mark-svg" {
         let mut out = BufWriter::new(File::create(&args[2])?);
         write_mark_svg(&mut out)?;
@@ -131,7 +188,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
     if args.len() != 4 {
         return Err(
-            "usage: render-undergrowth [--mark] WIDTH HEIGHT OUTPUT.ppm | --mark-svg OUTPUT.svg"
+            "usage: render-undergrowth [--mark] WIDTH HEIGHT OUTPUT.ppm | --mark-svg OUTPUT.svg | --app-svg tv|square OUTPUT.svg"
                 .into(),
         );
     }
@@ -193,5 +250,21 @@ mod tests {
         assert_eq!(svg.matches("<path ").count(), 9);
         assert!(!svg.contains("NaN"));
         assert!(svg.len() < 20_000);
+    }
+    #[test]
+    fn app_wordmarks_are_font_free_with_six_letters() {
+        for wide in [true, false] {
+            let mut bytes = Vec::new();
+            write_app_svg(&mut bytes, wide).unwrap();
+            let svg = String::from_utf8(bytes).unwrap();
+            assert_eq!(svg.matches("<path ").count(), 15);
+            assert!(!svg.contains("<text"));
+            assert!(!svg.contains("href="));
+            assert!(svg.contains(if wide {
+                "width=\"640\" height=\"360\""
+            } else {
+                "width=\"512\" height=\"512\""
+            }));
+        }
     }
 }

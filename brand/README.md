@@ -14,10 +14,24 @@ rustc --test brand/render-undergrowth.rs -o /tmp/fungos-art-tests
 /tmp/fungos-art-tests
 rustc -O brand/render-undergrowth.rs -o /tmp/fungos-art
 /tmp/fungos-art --mark-svg brand/fungos.svg
+/tmp/fungos-art --app-svg tv brand/fungos-tv.svg
+/tmp/fungos-art --app-svg square brand/fungos-app.svg
 /tmp/fungos-art --mark 512 512 /tmp/fungos-mark.ppm
 /tmp/fungos-art 1600 1000 /tmp/undergrowth.ppm
 ffmpeg -v error -y -i /tmp/fungos-mark.ppm -frames:v 1 brand/fungos-icon.png
 ffmpeg -v error -y -i /tmp/undergrowth.ppm -frames:v 1 brand/undergrowth.png
+```
+
+App variants include original, font-free path lettering: a wide 640 × 360
+launcher tile and a square 512 × 512 icon. The plain mark remains the favicon.
+Rasterize these SVGs with the pinned, offline-capable Rust tool:
+
+```sh
+cargo check --manifest-path brand/Cargo.toml --locked
+cargo test --manifest-path brand/Cargo.toml --locked
+cargo build --manifest-path brand/Cargo.toml --locked
+brand/target/debug/fungos-svg-render brand/fungos-tv.svg brand/fungos-tv.png
+brand/target/debug/fungos-svg-render brand/fungos-app.svg brand/fungos-app.png
 ```
 
 Code and artwork: MIT OR Apache-2.0. Trademark rights are separate; see
