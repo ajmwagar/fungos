@@ -71,3 +71,7 @@ Automatic APT policy remains outside that qualification.
 This check does not qualify Pi hardware, encrypted-root unlock, a fresh PXE
 claim, multi-package atomic updates, GPU passthrough, or media delivery to TV.
 Public screenshots and announcements require review before posting.
+
+The later [visual rollback qualification](visual-rollback.md) separately proves
+signed native Canvas/Unibus failure recovery and retained state across reboot
+in an offline disposable copy of the rebuilt edge image.

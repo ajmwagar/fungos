@@ -1,0 +1,15 @@
+[Unit]
+Description=Disposable offline visual edge rollback qualification
+After=mycelium.service canvas.service canvas-edge.service unibus-router.service
+Wants=mycelium.service canvas.service canvas-edge.service unibus-router.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/fungos-proof/visual-rollback-proof
+TimeoutStartSec=600
+StandardOutput=tty
+StandardError=tty
+TTYPath=/dev/ttyS0
+
+[Install]
+WantedBy=multi-user.target

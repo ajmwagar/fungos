@@ -59,6 +59,11 @@ Canvas and Unibus remain independent projects. The image profile supplies
 their runtime dependencies; it does not fork their implementations or grant
 discovered devices access automatically.
 
+See the [persistent QEMU dogfood runbook](docs/edge-dogfood.md) and
+[isolated visual rollback procedure](docs/visual-rollback.md) for boot,
+workspace retention and recovery checks. These procedures are qualifications,
+not a production installer or permission to run fault tests on your devices.
+
 ## License
 
 First-party code and documentation: **MIT OR Apache-2.0**, at your option.
