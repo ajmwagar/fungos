@@ -85,8 +85,15 @@ fn main() -> Result<()> {
                 return Err("package version did not persist across reboot".into());
             }
             command("systemctl", &["is-active", unit])?;
-            let executable = if package == "unibus-core" {"/usr/bin/unibus-router"} else {"/usr/bin/canvas-linux"};
-            command("/opt/fungos-apt/mycelium", &["software", "apt", "health", package, executable])?;
+            let executable = if package == "unibus-core" {
+                "/usr/bin/unibus-router"
+            } else {
+                "/usr/bin/canvas-linux"
+            };
+            command(
+                "/opt/fungos-apt/mycelium",
+                &["software", "apt", "health", package, executable],
+            )?;
         }
         println!("FUNGOS_EDGE_APT_REBOOT_VERIFIED");
         command("systemctl", &["--no-block", "poweroff"])?;
