@@ -19,3 +19,9 @@ It excludes live claims, peer identities, signing keys, credentials, generated
 images, boot logs, machine-specific service units and private infrastructure
 inventories. QEMU, Pi, signed-package and cloud qualification tooling will be
 migrated in reviewed slices after their path and input boundaries are checked.
+
+The `packages/` Rust publisher was subsequently imported from
+`mycelium/fungOS/packages/` and extended with compressed/by-hash indexes,
+explicit signed expiry, generation inventories and isolated Debian client tests.
+Only source and the Cargo lockfile were imported, not generated repositories,
+signing material or host-specific qualification artifacts.

@@ -26,6 +26,10 @@ signed first-party executables remain separate integration steps. The existing
 QEMU, Pi and cloud qualification work is being separated from the Mycelium
 development checkout; it is not all migrated here yet.
 
+The [signed APT publisher](packages/README.md) produces immutable, multi-architecture
+repository generations. Its [qualification](packages/QUALIFICATION.md) exercises
+real Debian client verification; the FPL Cloud origin is not deployed yet.
+
 ## Check and build
 
 Validate the declarations without building an image:
