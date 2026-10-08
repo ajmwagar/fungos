@@ -1,5 +1,8 @@
 # Signed Debian repository generations
 
+The [edge qualification](EDGE-QUALIFICATION.md) exercises Mycelium-coordinated
+Canvas/Unibus package upgrades, failed-update restoration and actual disk reboot.
+
 Debian supplies the operating system; component owners build their `.deb`
 payloads. This Rust publisher calls Debian's existing index tools and GnuPG.
 It does not build packages, create a production signing authority, upload
