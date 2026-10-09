@@ -25,11 +25,17 @@ curl -fSL https://cdimage.debian.org/cdimage/archive/13.1.0/amd64/iso-cd/debian-
 sh installer/check.sh
 sh installer/build.sh debian.iso fungos-headless-edge-amd64.iso
 sudo sh installer/qemu-proof.sh fungos-headless-edge-amd64.iso ./new-bios-proof
+sudo sh installer/qemu-proof.sh fungos-headless-edge-amd64.iso ./new-uefi-proof uefi
 ```
 
-The ISO preserves Debian's hybrid BIOS/UEFI boot structures. UEFI installation
-and Secure Boot must be validated separately; preserving boot structures alone
-does not establish either. For the BIOS text installer choose **Install**.
+The optional UEFI proof requires Debian/Ubuntu OVMF (`ovmf`). Its code is read-only;
+the harness copies the variable-store template into the fresh proof directory,
+then reuses that private NVRAM for the installed-disk reboot. Override the template
+paths with `FUNGOS_OVMF_CODE` and `FUNGOS_OVMF_VARS` if needed. Secure Boot is not
+enabled or proven by this mode. The 8 GiB UEFI test uses Debian's `small_disk`
+partition recipe: its `atomic` recipe requires more space for root, ESP and swap.
+The ISO preserves Debian's hybrid BIOS/UEFI boot structures; preserving those
+structures alone does not establish successful installation. For the text installer choose **Install**.
 Other installer entry variants are not yet validated.
 
 The harness refuses an existing output directory, creates its own blank 8 GiB
