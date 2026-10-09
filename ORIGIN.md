@@ -25,3 +25,12 @@ The `packages/` Rust publisher was subsequently imported from
 explicit signed expiry, generation inventories and isolated Debian client tests.
 Only source and the Cargo lockfile were imported, not generated repositories,
 signing material or host-specific qualification artifacts.
+
+The `installer/` wrapper was imported from Mycelium's isolated
+`feat/fungos-installer` work, commits `f3c1a0e` and `93f4630`;
+`release/` comes from `feat/fungos-release-torrents`, commit `9eac4b5`.
+Only scripts, Rust source, Cargo metadata and runbooks were migrated. Retained
+QEMU evidence and generated images remain outside this repository. Historical
+BIOS proof in the installer runbook belongs to its recorded source and digest,
+not to a new build using this checkout's shared baseline. Neither migration
+imports a private identity, source closure or release approval.

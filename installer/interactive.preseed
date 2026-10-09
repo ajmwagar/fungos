@@ -1,0 +1,4 @@
+# Generic public media: no passwords, keys, claim, target disk or erasure approval.
+# Build tooling wires this into normal BIOS/UEFI installer boot entries.
+d-i pkgsel/include string ca-certificates
+d-i preseed/late_command string cp -a /cdrom/fungos /target/tmp/fungos-installer && in-target /bin/sh /tmp/fungos-installer/apply.sh

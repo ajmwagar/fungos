@@ -1,0 +1,37 @@
+# Harness-only, never shipped inside public ISO.
+d-i preseed/early_command string echo FUNGOS_TEST_PRESEED_LOADED >/dev/ttyS0
+d-i debian-installer/locale string en_US.UTF-8
+d-i keyboard-configuration/xkb-keymap select us
+d-i netcfg/choose_interface select auto
+d-i netcfg/hostname string fungos
+d-i netcfg/get_domain string local
+d-i hw-detect/load_firmware boolean false
+d-i apt-setup/use_mirror boolean false
+d-i apt-setup/services-select multiselect
+d-i passwd/root-password-crypted password !
+d-i passwd/root-login boolean false
+d-i passwd/make-user boolean true
+d-i passwd/user-fullname string Disposable QEMU Proof
+d-i passwd/username string installer-proof
+d-i passwd/user-password-crypted password !
+d-i clock-setup/utc boolean true
+d-i time/zone string UTC
+d-i clock-setup/ntp boolean false
+d-i partman/early_command string /guard-disk || { echo 'FUNGOS DISK GUARD REJECTED' >/dev/ttyS0; poweroff; exit 1; }
+d-i partman-auto/disk string /dev/vda
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select atomic
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+d-i partman/mount_style select uuid
+tasksel tasksel/first multiselect
+d-i pkgsel/include string ca-certificates
+d-i pkgsel/upgrade select none
+popularity-contest popularity-contest/participate boolean false
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/bootdev string /dev/vda
+d-i preseed/late_command string cp -a /cdrom/fungos /target/tmp/fungos-installer && in-target /bin/sh /tmp/fungos-installer/apply.sh >/dev/ttyS0 2>&1 && mkdir -p /target/etc/default/grub.d && echo 'GRUB_CMDLINE_LINUX="console=ttyS0,115200n8"' > /target/etc/default/grub.d/fungos-console.cfg && in-target update-grub
+d-i finish-install/reboot_in_progress note
+d-i debian-installer/exit/poweroff boolean true

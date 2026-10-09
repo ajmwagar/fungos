@@ -30,6 +30,13 @@ The [signed APT publisher](packages/README.md) produces immutable, multi-archite
 repository generations. Its [qualification](packages/QUALIFICATION.md) exercises
 real Debian client verification; the FPL Cloud origin is not deployed yet.
 
+The [amd64 installer tooling](installer/README.md) and
+[torrent release preparer](release/README.md) live here as well. The installer
+shares the base profile and overlay rather than maintaining another package
+list. Its tested Debian 13 input requires the shared baseline to be refreshed
+before building; this import does not claim a qualified release candidate.
+Torrent preparation is local packaging, not publication or release signing.
+
 ## Check and build
 
 Validate the declarations without building an image:
