@@ -77,6 +77,8 @@ qemu_pid=''
 grep -q 'fungos login:' "$proof/boot.log"
 if [ "$firmware" = uefi ]; then
  grep -q 'efi: EFI v' "$proof/install.log"
- grep -q 'efi: EFI v' "$proof/boot.log"
+ # GRUB's normal quiet default suppresses the kernel EFI banner. OVMF records
+ # the actual installed GPT/ESP loader it starts, unlike a firmware menu boot.
+ grep -q 'BdsDxe: starting .* from HD(' "$proof/boot.log"
 fi
 echo "installed-disk $firmware boot reached login; evidence: $proof"
