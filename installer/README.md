@@ -56,7 +56,10 @@ Machine ID and host keys are reset during installation and generated on first
 boot. Enrollment still needs an existing authorized claim delivery adapter;
 this ISO does not introduce a new claim protocol or distribute secrets over
 preseed, kernel arguments, TFTP or public HTTP. Mycelium/Unibus executable
-releases are not embedded by this first installer wrapper.
+releases are not embedded by the two-argument baseline build. The optional third
+argument includes a [verified owner-component bundle](../packages/COMPONENTS.md).
+Only final operational qualification can establish release readiness; a baseline
+ISO explicitly records `runtime_components=absent` in its manifest.
 
 ## Release evidence
 

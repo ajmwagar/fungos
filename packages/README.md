@@ -5,6 +5,8 @@ Canvas/Unibus package upgrades, failed-update restoration and actual disk reboot
 
 Debian supplies the operating system; component owners build their `.deb`
 payloads. This Rust publisher calls Debian's existing index tools and GnuPG.
+The [runtime component gate](COMPONENTS.md) validates owner packages before
+installer inclusion and records remaining operational-release blockers.
 It does not build packages, create a production signing authority, upload
 objects, or replace APT/dpkg.
 

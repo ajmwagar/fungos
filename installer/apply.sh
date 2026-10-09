@@ -12,6 +12,15 @@ rm -f /etc/apt/sources.list.d/debian.sources
 apt-get update
 apt-get -y --no-install-recommends dist-upgrade
 xargs apt-get install -y --no-install-recommends < "$payload/packages"
+if [ -d "$payload/components" ]; then
+  (cd "$payload/components" && sha256sum -c SHA256SUMS)
+  # APT resolves runtime dependencies from the same signed Debian snapshot.
+  # Owner packages must not contain maintainer scripts that auto-enroll/start.
+  apt-get install -y --no-install-recommends "$payload"/components/*.deb
+  mkdir -p /usr/share/fungos/components
+  cp "$payload/components/components.tsv" "$payload/components/SHA256SUMS" /usr/share/fungos/components/
+  systemctl enable mycelium.service unibus-router.service
+fi
 cp -a "$payload/rootfs/." /
 chmod 0755 /usr/libexec/fungos-first-contact /usr/libexec/fungos-verify-update
 mkdir -p /usr/lib/fungos/first-contact.d /usr/lib/fungos/update-verifiers.d /usr/share/fungos/installer
