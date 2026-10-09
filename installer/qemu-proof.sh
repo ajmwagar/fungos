@@ -63,6 +63,10 @@ timeout 2400 qemu-system-x86_64 "$@" -enable-kvm -m 2048 -smp 2 -nographic -no-r
 qemu_pid=$!
 wait "$qemu_pid"
 qemu_pid=''
+grep -q 'FUNGOS_INSTALL_COMPLETE' "$proof/install.log" || {
+ echo 'installer exited without successful profile convergence; inspect install.log' >&2
+ exit 1
+}
 # Boot only installed disk: no kernel/initrd/ISO on this second invocation.
 timeout 240 qemu-system-x86_64 "$@" -enable-kvm -m 1024 -smp 2 -nographic -no-reboot \
  -drive "file=$proof/disposable.qcow2,format=qcow2,if=none,id=disk0" -device virtio-blk-pci,drive=disk0,serial=FUNGOS_DISPOSABLE \

@@ -32,6 +32,6 @@ d-i pkgsel/upgrade select none
 popularity-contest popularity-contest/participate boolean false
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/bootdev string /dev/vda
-d-i preseed/late_command string cp -a /cdrom/fungos /target/tmp/fungos-installer && in-target /bin/sh /tmp/fungos-installer/apply.sh >/dev/ttyS0 2>&1 && mkdir -p /target/etc/default/grub.d && echo 'GRUB_CMDLINE_LINUX="console=ttyS0,115200n8"' > /target/etc/default/grub.d/fungos-console.cfg && in-target update-grub
+d-i preseed/late_command string cp -a /cdrom/fungos /target/tmp/fungos-installer && in-target /bin/sh /tmp/fungos-installer/apply.sh >/dev/ttyS0 2>&1 && mkdir -p /target/etc/default/grub.d && echo 'GRUB_CMDLINE_LINUX="console=ttyS0,115200n8"' > /target/etc/default/grub.d/fungos-console.cfg && in-target update-grub && echo FUNGOS_INSTALL_COMPLETE >/dev/ttyS0
 d-i finish-install/reboot_in_progress note
 d-i debian-installer/exit/poweroff boolean true
