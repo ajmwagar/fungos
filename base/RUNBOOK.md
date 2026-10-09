@@ -13,7 +13,9 @@ mode), outbound HTTPS, and enough free space for one root filesystem.
 1. From the repository root, change to `base`.
 2. Run `./scripts/check.sh` to validate declarations and shell code.
 3. Run `sudo ./scripts/build.sh amd64` or `sudo ./scripts/build.sh arm64`.
-4. Find the rootfs tarball, manifest, package list, and SHA-256 checksum in
+4. Find the rootfs tarball, manifest, requested package list, exact installed
+   binary/source version inventory, authenticated archive release inputs,
+   and SHA-256 checksum in
    `out/`.
 5. Run `sudo ./scripts/inspect.sh out/fungos-base-ARCH.tar`.
 
@@ -21,6 +23,15 @@ The build refuses unsupported architectures and unknown or duplicate
 capabilities. Override `OUT_DIR` or `WORK_DIR` for CI scratch storage. Do not
 override the snapshot for a release without reviewing and committing the new
 lock values.
+
+The base, updates and security archives share the committed snapshot cutoff.
+APT signature and package-hash verification remain enabled; only time expiry
+is relaxed for immutable historical snapshots. The retained `release-inputs/`
+directory contains all three `InRelease` files and their checksums. Verify them
+manually with `gpgv --keyring /usr/share/keyrings/debian-archive-keyring.gpg FILE`.
+The installed TSV is an input to source/license closure and CVE assessment,
+not itself corresponding source or a security-clearance result. A pinned
+snapshot does not receive future fixes: advance it and requalify the image.
 
 ## Reproducibility check
 

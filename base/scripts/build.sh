@@ -22,6 +22,8 @@ rootfs="$work_dir/rootfs"
 artifact="$out_dir/fungos-$profile-$arch.tar"
 package_file="$out_dir/fungos-$profile-$arch.packages"
 manifest="$out_dir/fungos-$profile-$arch.manifest"
+inventory="$out_dir/fungos-$profile-$arch.installed.tsv"
+release_inputs="$out_dir/fungos-$profile-$arch.release-inputs"
 
 mkdir -p "$out_dir" "$work_dir"
 [ ! -e "$rootfs" ] || { echo "refusing non-clean work directory: $rootfs" >&2; exit 1; }
@@ -29,8 +31,11 @@ overlay=${CAPABILITY_OVERLAY:-}
 "$base_dir/scripts/resolve-packages.sh" "$base_dir/profiles/$profile.capabilities" "$overlay" > "$package_file"
 packages=$(paste -sd, "$package_file")
 mirror="deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/$DEBIAN_SNAPSHOT $DEBIAN_SUITE main"
+updates_mirror="deb [check-valid-until=no] https://snapshot.debian.org/archive/debian/$DEBIAN_SNAPSHOT $DEBIAN_SUITE-updates main"
+security_mirror="deb [check-valid-until=no] https://snapshot.debian.org/archive/debian-security/$DEBIAN_SNAPSHOT $DEBIAN_SUITE-security main"
 
 mmdebstrap \
+  --skip=cleanup/apt/lists \
   --variant=minbase \
   --keyring="$debian_keyring" \
   --architectures="$arch" \
@@ -42,7 +47,17 @@ mmdebstrap \
   --dpkgopt='path-include=/usr/share/doc/*/copyright' \
   --dpkgopt='path-exclude=/usr/share/man/*' \
   --dpkgopt='path-exclude=/usr/share/locale/*' \
-  "$DEBIAN_SUITE" "$rootfs" "$mirror"
+  "$DEBIAN_SUITE" "$rootfs" "$mirror" "$updates_mirror" "$security_mirror"
+
+# APT validates signed release metadata and package hashes. Keep its exact
+# authenticated inputs alongside source/version inventory before sanitizing.
+chroot "$rootfs" dpkg-query -W -f='${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\t${Architecture}\n' \
+  | LC_ALL=C sort > "$inventory"
+[ -s "$inventory" ] || { echo 'installed package inventory is empty' >&2; exit 1; }
+mkdir -p "$release_inputs"
+find "$rootfs/var/lib/apt/lists" -maxdepth 1 -type f -name '*InRelease' -exec cp {} "$release_inputs/" \;
+[ "$(find "$release_inputs" -type f -name '*InRelease' | wc -l)" -eq 3 ] || { echo 'expected three authenticated archive releases' >&2; exit 1; }
+(cd "$release_inputs" && sha256sum *InRelease) > "$release_inputs/SHA256SUMS"
 
 cp -a "$base_dir/rootfs/." "$rootfs/"
 chmod 0755 "$rootfs/usr/libexec/fungos-first-contact" "$rootfs/usr/libexec/fungos-verify-update"
@@ -79,6 +94,9 @@ tar --sort=name --format=posix --numeric-owner --owner=0 --group=0 \
   echo "artifact=$(basename "$artifact")"
   echo "artifact_sha256=$(sha256sum "$artifact" | cut -d' ' -f1)"
   echo "packages_sha256=$(sha256sum "$package_file" | cut -d' ' -f1)"
+  echo "installed_sha256=$(sha256sum "$inventory" | cut -d' ' -f1)"
+  echo "release_inputs_sha256=$(sha256sum "$release_inputs/SHA256SUMS" | cut -d' ' -f1)"
+  echo "archive_suites=$DEBIAN_SUITE,$DEBIAN_SUITE-updates,$DEBIAN_SUITE-security"
 } > "$manifest"
 (cd "$out_dir" && sha256sum "$(basename "$artifact")") > "$artifact.sha256"
 echo "built $artifact"
