@@ -41,3 +41,49 @@ Raw QEMU framebuffer captures remain in
 The public-menu QEMU was stopped afterward. The preexisting edge QEMU was not
 changed. Final baseline/component enrollment and update gates remain open in
 Marbles (`mycelium-v34j`, `mycelium-fungos-component-packaging`).
+
+## Refreshed baseline install and reboot (2026-10-09)
+
+Built the OS-only installer from committed source
+`c1b1fc74bb8bd509abe16df758b819e565ca3878`, with explicit `SOURCE_COMMIT` for
+the archived source tree. This candidate uses trixie snapshot
+`20261009T000000Z`; it does **not** contain the pending Mycelium/Unibus owner
+package bundle. It is not a v0.1.0 release candidate for operational use.
+
+- ISO: `fungos-trixie-20261009-v2.iso`, SHA-256
+  `ae1aabf257bc84880592c2cb213ff0c7c9051bfbf870d3944fd892eeb9fd0ffa`.
+- Archived source SHA-256:
+  `1281ca5672d357897bd70d7dd3b2c3958546ddec9d5d2ec10d87a14a951436e2`.
+- Evidence root on Agora:
+  `/home/ajmwagar/.cache/fungos-uefi-qualification.4sfRDU/`.
+
+Both fresh disposable installations emitted `FUNGOS_INSTALL_COMPLETE` after
+profile convergence and GRUB configuration. Separate disk-only BIOS and UEFI
+boots reached `fungos login:` with kernel `6.12.111+deb13-amd64`. The UEFI log
+records OVMF starting `\EFI\debian\shimx64.efi` from the installed GPT ESP.
+BIOS harness exited zero. The copied pre-fix UEFI harness exited one because
+GRUB's quiet default suppresses the kernel EFI banner; the corrected check in
+`600235d` was independently applied to its retained logs and passed. This is
+not a claim that the pre-fix harness exited successfully.
+
+| Evidence | SHA-256 |
+|---|---|
+| `fresh-bios-proof/install.log` | `707f49b93327254107d8c1894a10acfa2db6c019471afb2423e47909e1b4ec5d` |
+| `fresh-bios-proof/boot.log` | `3fd941d2648d566a50c6d9859942b2ae52457a3c16105c3bbba9e607d91a62a0` |
+| `fresh-uefi-proof/install.log` | `508be188e6987454d0957bf6b33cf24e698e826880e88272154f279450112660` |
+| `fresh-uefi-proof/boot.log` | `d38bd6a8577cfe00d9d93d064d02c41a5178c4fb21f335a4152137329770b50a` |
+| `fresh-uefi-proof/reboot-persistence.log` | `c08f7e8b14ff9596f9dbc64752ddbf40e6c0c884c910c148be4fe9ecadcb575c` |
+
+A further installed-disk-only UEFI boot reached login, then shut down using its
+private QEMU monitor's ACPI power button. Read-only disk inspections before and
+after that reboot found unchanged machine-ID and ED25519 host-public-key hashes,
+and unchanged 214-row binary/source package inventory. Inventory SHA-256 is
+`8c8ba0e00c2b50596b45d7c3b0f56feeca379ab75569f3f22ea69aae1986b40d`.
+The shared SSH/networkd units are enabled; the generated host public key exists;
+no first-contact claim environment or installer payload remains. Read-only loop
+devices were detached and all qualification QEMUs stopped afterward.
+
+The Debian `systemd-ssh-generator` AF_VSOCK CID warning remains visible. These
+checks do not establish whole-system unit health, a completed public interactive
+installation, production enrollment, personal certificate SSH, Secure Boot or
+real component update/rollback. Those gates remain open.
