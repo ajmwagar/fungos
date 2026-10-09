@@ -1,5 +1,8 @@
 # fungOS headless installer (amd64, first slice)
 
+Final-image gates and digest-bound preparatory evidence are in
+[QUALIFICATION.md](QUALIFICATION.md).
+
 This is a Debian 13 installer delivery wrapper, not a second operating-system
 package pipeline. It resolves `base/profiles/headless-edge.capabilities`, applies
 the common `base/rootfs` configuration, and converges Debian packages to the
