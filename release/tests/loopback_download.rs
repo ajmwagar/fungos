@@ -117,13 +117,21 @@ fn empty_client_downloads_matching_bytes_from_loopback_seed() {
     // Transmission4.1 derives its source address against a global destination.
     // A fresh network namespace with only lo and a lo-only default route makes
     // that selection work without permitting any external packet or interface.
-    let interfaces: Vec<_> = fs::read_dir("/sys/class/net")
-        .unwrap()
-        .map(|e| e.unwrap().file_name())
+    assert_ne!(
+        fs::read_link("/proc/self/ns/net").unwrap(),
+        fs::read_link("/proc/1/ns/net").unwrap(),
+        "test must run in its own network namespace"
+    );
+    // sysfs can retain the parent's mount even inside a network namespace.
+    // ip queries the actual namespace instead of that inherited mount.
+    let interface_output = run("ip", &["-o", "link", "show"]);
+    let interfaces: Vec<_> = interface_output
+        .lines()
+        .map(|line| line.split(':').nth(1).unwrap().trim())
         .collect();
     assert_eq!(
         interfaces,
-        vec![std::ffi::OsString::from("lo")],
+        vec!["lo"],
         "run this ignored test with sudo unshare --net; host networking must remain untouched"
     );
     run("ip", &["link", "set", "lo", "up"]);
