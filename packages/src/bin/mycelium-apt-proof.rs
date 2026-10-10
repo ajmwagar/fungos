@@ -237,6 +237,10 @@ fn main() -> Result<()> {
     fs::remove_file(&key)?;
     let rejection = apply(&path, &digest);
     fs::write(&key, key_bytes)?;
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&key, fs::Permissions::from_mode(0o644))?;
+    }
     rejected(rejection, "apt-get failed")?;
     require(version()? == "0.1.0", "missing key changed version")?;
     println!("FUNGOS_MYCELIUM_APT_MISSING_SIGNED_BY_KEY_REJECTED");
