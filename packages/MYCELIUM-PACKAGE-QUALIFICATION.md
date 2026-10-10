@@ -31,8 +31,10 @@ commit, Debian package/version/architecture/SHA-256 and complete test logs.
 4. **Ownership enforcement:** attempt native self-update against the
    package-owned executable. It must reject before changing the executable,
    unit, package state or native activation/backup state. Exercise the real
-   explicit-write path, including a destination symlink/alias, using a valid
-   isolated signed release. The underlying activation entry point must enforce
+   explicit-write path, including a destination symlink/alias. The package
+   ownership guard runs before release retrieval, so its rejection can be
+   qualified without publishing a signed release; this is not release-signature
+   validation. The underlying activation entry point must enforce
    the same guard before any backup/failed-health rollback path can run. There
    is no public native rollback CLI command; rejection of an unknown command
    proves nothing about ownership. Do not authorize native automatic activation
@@ -64,3 +66,12 @@ binary with a native copied binary or bypassing certificate verification.
 
 This gate covers Mycelium package ownership and enrollment, not Secure Boot,
 TPM protection, public APT hosting, Pi hardware, or Unibus redistribution.
+
+The private Rust helpers `src/bin/mycelium-package-image.rs` and
+`src/bin/mycelium-package-proof.rs` assemble a clone of an unenrolled installer
+qualification disk and run these checks inside it. Inputs are genuine owner
+packages, never fixture executables. The assembler refuses block devices and
+symlink inputs. The proof refuses a guest without its exact qualification DMI
+marker, generates an isolated runtime authority, and delivers the claim only to
+a private `/run` file. These helpers do not qualify the signed-repository
+Mycelium APT `plan`/`apply`/`recover` engine or personal SSH grants.
