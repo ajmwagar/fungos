@@ -273,11 +273,55 @@ fn main() -> Result<()> {
     match args.first().map(String::as_str) {
         Some("inventory") if args.len() == 5 => inventory(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), Path::new(&args[4])),
         Some("fetch") if args.len() == 6 => fetch(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), &args[4], &args[5]),
+        Some("resolve-initrd") if args.len() == 4 => resolve_initrd(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3])),
         _ => Err("usage: source-closure inventory INSTALLED.tsv EXTRACTED_ISO INITRD_DPKG_STATUS NEW_REQUIREMENTS.tsv | fetch REQUIREMENTS.tsv NEW_PRIVATE_CACHE DEBIAN_ARCHIVE_KEYRING INSTALLED_SNAPSHOT INSTALLER_SNAPSHOT".into())
+    }
+}
+// The installer's compact status often omits Source. Resolve those binaries
+// against the authenticated source indexes retained by our isolated APT fetch.
+fn resolve_initrd(requirements: &Path, lists: &Path, output: &Path) -> Result<()> {
+    if output.exists() { return Err("refusing existing resolved requirements".into()); }
+    let mut mappings = BTreeSet::new();
+    for entry in fs::read_dir(lists)? {
+        let entry = entry?;
+        if !entry.file_type()?.is_file() || !entry.file_name().to_string_lossy().contains("Sources") { continue; }
+        let data = run("/usr/lib/apt/apt-helper", &["cat-file".into(), entry.path().to_str().ok_or("non UTF8 index")?.into()], None)?;
+        for stanza in data.split("\n\n") {
+            let field = |name: &str| stanza.lines().find_map(|line| line.strip_prefix(&format!("{name}: ")));
+            if let (Some(name), Some(version), Some(binaries)) = (field("Package"), field("Version"), field("Binary")) {
+                for binary in binaries.split(',').map(str::trim) {
+                    mappings.insert((binary.to_owned(), version.to_owned(), name.to_owned()));
+                }
+            }
+        }
+    }
+    let mut resolved = BTreeSet::new();
+    for line in fs::read_to_string(requirements)?.lines() {
+        let fields: Vec<_> = line.split('\t').collect();
+        if fields.len() != 3 { return Err("requirements must have three fields".into()); }
+        if fields[0] == "mycelium" { continue; } // Separate owner source closure.
+        if fields[2] != "installer-initrd" { resolved.insert(line.to_owned()); continue; }
+        let version = bin_nmu_source_version(fields[1]);
+        let names: BTreeSet<_> = mappings.iter().filter(|(binary, revision, _)| binary == fields[0] && revision == version).map(|(_, _, name)| name).collect();
+        if names.len() != 1 { return Err(format!("unresolved/ambiguous initrd source {} {}", fields[0], fields[1]).into()); }
+        resolved.insert(format!("{}\t{version}\tinstaller-initrd", names.first().unwrap()));
+    }
+    fs::write(output, resolved.into_iter().collect::<Vec<_>>().join("\n") + "\n")?;
+    Ok(())
+}
+fn bin_nmu_source_version(version: &str) -> &str {
+    match version.rsplit_once("+b") {
+        Some((source, suffix)) if !suffix.is_empty() && suffix.bytes().all(|b| b.is_ascii_digit()) => source,
+        _ => version,
     }
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn strips_only_final_numeric_bin_nmu() {
+        assert_eq!(super::bin_nmu_source_version("1:1.2+b3"), "1:1.2");
+        assert_eq!(super::bin_nmu_source_version("1+bfix"), "1+bfix");
+    }
     #[test]
     fn source_bin_nmu_version_is_exact() {
         assert_eq!(
