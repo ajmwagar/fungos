@@ -97,7 +97,7 @@ fn daemon(root: &Path, label: &str, rpc: u16, peer: u16, download: &Path) -> Dae
                 "--no-lpd",
                 "--no-portmap",
                 "--bind-address-ipv4",
-                "127.0.0.1",
+                "10.254.0.1",
                 "--bind-address-ipv6",
                 "::1",
                 "--rpc-bind-address",
@@ -145,6 +145,10 @@ fn empty_client_downloads_matching_bytes_from_loopback_seed() {
         "run this ignored test with sudo unshare --net; host networking must remain untouched"
     );
     run("ip", &["link", "set", "lo", "up"]);
+    // Transmission deliberately rejects 127/8 addresses learned from trackers.
+    // A private alias lives ONLY on this isolated namespace's loopback device.
+    // https://github.com/transmission/transmission/blob/4.1.1/libtransmission/net.cc
+    run("ip", &["address", "add", "10.254.0.1/32", "dev", "lo"]);
     run("ip", &["route", "add", "default", "dev", "lo"]);
     let root = std::env::temp_dir().join(format!(
         "fungos-torrent-download-{}-{}",
@@ -191,7 +195,7 @@ fn empty_client_downloads_matching_bytes_from_loopback_seed() {
         while !halt.load(Ordering::SeqCst) {
             match tracker_listener.accept() {
                 Ok((mut stream, address)) => {
-                    assert!(address.ip().is_loopback());
+                    assert!(address.ip().is_loopback() || address.ip() == std::net::IpAddr::V4(std::net::Ipv4Addr::new(10, 254, 0, 1)));
                     stream
                         .set_read_timeout(Some(Duration::from_millis(250)))
                         .unwrap();
@@ -205,7 +209,7 @@ fn empty_client_downloads_matching_bytes_from_loopback_seed() {
                     let mut body =
                         b"d8:intervali1e8:completei1e10:incompletei1e5:peers12:".to_vec();
                     for port in [seed_port, leecher_port] {
-                        body.extend([127, 0, 0, 1]);
+                        body.extend([10, 254, 0, 1]);
                         body.extend(port.to_be_bytes());
                     }
                     body.push(b'e');
