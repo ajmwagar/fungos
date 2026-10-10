@@ -1,7 +1,10 @@
 # Mycelium owner-package qualification
 
-Status: test plan only. No owner-built Mycelium `.deb` or operational image has
-passed these gates yet. Unibus is excluded pending its independent licensing
+Status: genuine owner packages passed the isolated install/enrollment/repair,
+Debian lifecycle and reboot gates below on 2026-10-09. Personal SSH access and
+the signed-repository update engine remain unverified; this is not a complete
+operational release image qualification. Unibus is excluded pending its
+independent licensing
 decision. Baseline installer evidence is in
 [../installer/QUALIFICATION.md](../installer/QUALIFICATION.md).
 
@@ -75,3 +78,63 @@ symlink inputs. The proof refuses a guest without its exact qualification DMI
 marker, generates an isolated runtime authority, and delivers the claim only to
 a private `/run` file. These helpers do not qualify the signed-repository
 Mycelium APT `plan`/`apply`/`recover` engine or personal SSH grants.
+
+## Verified private guest run: 2026-10-09
+
+Package executable, assets and packager came from the same clean Mycelium source
+`138feeb298174b9158e03bf2c76692572ce3e7df`. Both are genuine static-musl amd64
+owner builds, not fixture binaries:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `mycelium_0.1.0_amd64.deb` | `67db12ef7ea04b34e9a7ea9125d5bd563ee22f378244db00f41b82cf1c67a556` |
+| `mycelium_0.1.0+qualification2_amd64.deb` | `491a0c590030ee34ecc47fd53f833489ef8a56b042701c6c7150637d5e2c0cc7` |
+| Package executable | `6956b35956332a897ba7f398e019113b91b6f211bb0ce657e266ab54b11733fa` |
+| Native systemd unit | `cd10657d4feac46fcdbce594f3ce0dade7ca2fdff8b2adec1a24dbd05fd02051` |
+
+A and B intentionally contain the same executable. The test proves real Debian
+version transitions, retained private configuration and explicit native-service
+restart, not changed-code compatibility or application data-migration rollback.
+
+The private proof source was fungOS
+`917de0d80a61f9879ef05d6a65b9052e8d3166b0`; the final clone assembler source
+was `505d0cdf2d177d5cb783a61eae1c2f05bb889bca`. On Agora, artifacts are under
+`/home/ajmwagar/.cache/mycelium-deb-source138/artifacts` and private qualification
+evidence is under `/home/ajmwagar/.cache/fungos-package-proof.yiSXTq`.
+`guest-v5/disk.raw` is a clone of the refreshed Trixie installer qualification
+disk, not a public release image. No production identity or fleet node changed.
+The guest had no NIC/backend, host forwarding or shared filesystem. A QA-only
+dummy interface with `192.0.2.1/32`, without routes, satisfied its normal
+network-online dependency. Enrollment used a fresh in-guest authority and a
+short-lived loopback claim stored only in private `/run` state.
+
+The retained first-boot journal records all seven acceptance markers through
+`FUNGOS_MYCELIUM_PACKAGE_AWAITING_REBOOT`: inert install, guarded native explicit
+write (including an alias), the actual first-contact service with
+`ProtectSystem=strict` and `ProtectHome=yes`, repair, genuine APT upgrade and
+downgrade, with package-owned binary/unit and unchanged private identity hashes.
+The same disk's second native UEFI boot records
+`FUNGOS_MYCELIUM_PACKAGE_REBOOT_VERIFIED`. Its first-contact unit correctly
+skipped because the successfully consumed runtime claim was absent; the native
+daemon was healthy and used the package executable.
+
+| Retained evidence | SHA-256 |
+| --- | --- |
+| `qualification-v5-boot1.journal` | `341f093a137e8c40ccf215246c88b8323fc7dbc4c8992da38f3957d8e122f217` |
+| `qualification-v5-boot2.journal` | `b1d97cad4d69e1a237a365af5b314d0de9fc3c8203515bb5946d546079db7b50` |
+| `guest-v5/boot1.log` | `b494a559f2464728f6419bd70a10deac12c0f05f079f82ab1192a26c548f9934` |
+| `guest-v5/boot2.log` | `bbf4e0bd4f2282e0c78a51bf02a9f14308bd5fe84f2ddad97b3b2f87d728caef` |
+
+The snapshot of peer signing key, Iroh key, node certificate/key, node config and
+SSH host public-key hashes remained identical through repair, A→B→A and reboot;
+its private receipt SHA-256 is
+`e18e38d033a3b4ca33344eec4a84c22eb5e9d97538f08de59b5c59c385f43925`.
+Key contents and claim tokens are not published. Both successful boots powered
+off; all owned qualification QEMUs stopped and inspection loops detached.
+
+Earlier private attempts are preserved but not accepted: no-NIC online gating
+prevented execution, `apt-get --no-download` rejected local staging, and serial
+getty reset the proof's stdout. The final run uses normal APT local-file install
+with no external connectivity and writes its evidence to the retained journal.
+The Debian AF_VSOCK SSH generator warning remains a baseline finding and is not
+silently treated as a clean whole-system health result.
