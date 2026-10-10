@@ -63,9 +63,24 @@ remain there. **Do not publish the private clone.**
 | `claim-proof/boot1.log` | `1ee99da165e118d69887fe97778bf19720129c8c046076773624cbd8502a1d93` |
 | `claim-proof/boot2.log` | `fed416504918b968d36197d101ab980fa02ecf4cf719a09c008e668c2eb6870b` |
 
+The same exact ISO also passed guarded fresh BIOS installation and native
+disk-only boot with kernel `6.12.111+deb13-amd64`; its harness exited zero.
+Read-only inspection confirmed Mycelium enabled but unenrolled, no claim
+environment, and retained narrow purpose. BIOS inventory: 207 rows, SHA-256
+`6787dadeed12cc380c291f4561cb8dbe0c95c388b60a05cf953b9cc21f0b910c`.
+BIOS log hashes: install
+`c1763aafc9a98e6c6b196e472cd859d12e2df90a9550acf54bc64463bd3c6b4c`,
+boot `796acc5722594c6c1bcf73b1d0fc16e3e72e855a0b05ac2aea2a7bba83c2a82f`.
+Public inventories and package copyright notices were exported separately to
+`release-inputs/`, never from a private home or identity directory. These are
+closure inputs, not complete corresponding source: the netinst media includes
+installer/kernel packages beyond the installed inventories.
+
 Earlier `e422796` ISO proof was preparatory only; installed-purpose retention
-was not in those bytes. BIOS and fully interactive installation of these final
-bytes remain unverified. The known Debian AF_VSOCK generator warning remains.
+was not in those bytes. Fully interactive installation remains unverified.
+The known Debian AF_VSOCK generator warning remains. A later SSH-fixed package
+must be included in a new ISO and qualified again; these results are not
+transferable to substituted package bytes.
 No Unibus, physical media, production identity, fleet upgrade, publication or
 compliance clearance is claimed. Personal SSH and signed APT lifecycle are
 separate qualifications.
