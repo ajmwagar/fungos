@@ -243,9 +243,15 @@ fn empty_client_downloads_matching_bytes_from_loopback_seed() {
     let mut leecher_daemon = daemon(&root, "download-state", ports[2], ports[3], &download);
     let seed_rpc = format!("127.0.0.1:{}", ports[0]);
     let download_rpc = format!("127.0.0.1:{}", ports[2]);
+    let mut reported_rpc_error = false;
     wait(|| {
-        remote(&seed_rpc, &["--list"]).status.success()
-            && remote(&download_rpc, &["--list"]).status.success()
+        let seed = remote(&seed_rpc, &["--list"]);
+        let download = remote(&download_rpc, &["--list"]);
+        if !reported_rpc_error && (!seed.status.success() || !download.status.success()) {
+            eprintln!("initial RPC: seed={} {} {}; download={} {} {}", seed.status, String::from_utf8_lossy(&seed.stdout), String::from_utf8_lossy(&seed.stderr), download.status, String::from_utf8_lossy(&download.stdout), String::from_utf8_lossy(&download.stderr));
+            reported_rpc_error = true;
+        }
+        seed.status.success() && download.status.success()
     });
     remote_ok(
         &seed_rpc,
