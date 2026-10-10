@@ -347,27 +347,35 @@ fn main() -> Result<()> {
     }
     let first_version = command("dpkg-deb", &["-f", &a, "Version"])?;
     let next_version = command("dpkg-deb", &["-f", &b, "Version"])?;
-    require(
-        command(
-            "dpkg",
-            &[
-                "--compare-versions",
-                first_version.trim(),
-                "lt",
-                next_version.trim(),
-            ],
-        )
-        .is_ok(),
-        "upgrade version is not newer",
-    )?;
+    if !preinstalled {
+        require(
+            command(
+                "dpkg",
+                &[
+                    "--compare-versions",
+                    first_version.trim(),
+                    "lt",
+                    next_version.trim(),
+                ],
+            )
+            .is_ok(),
+            "upgrade version is not newer",
+        )?;
+    }
     if preinstalled {
         require(
             installed_version()? == first_version.trim(),
             "installer package version mismatch",
         )?;
+        let payload = format!("{QA}/preinstalled-payload");
         require(
-            digest(BINARY)? == fungos_apt_repository::QUALIFIED_MYCELIUM_AMD64_SHA256,
-            "installer executable is not qualified source138feeb",
+            !Path::new(&payload).exists(),
+            "reused package payload extraction",
+        )?;
+        command("dpkg-deb", &["-x", &a, &payload])?;
+        require(
+            digest(BINARY)? == digest(&format!("{payload}/usr/bin/mycelium"))?,
+            "installer executable differs from pinned genuine owner package",
         )?;
     } else {
         command("apt-get", &["-y", "install", &a])?;
