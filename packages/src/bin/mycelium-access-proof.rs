@@ -261,6 +261,31 @@ fn proof() -> Result<()> {
         CLI,
         &["access", "ssh", "host-policy", "reconcile", "--write"],
     )?;
+    run(
+        CLI,
+        &[
+            "access",
+            "ssh",
+            "client-config",
+            "--host",
+            "qa-host",
+            "--hostname",
+            "127.0.0.1",
+            "--user",
+            "qaallowed",
+            "--identity",
+            &p("allowed"),
+            "--certificate",
+            &p("allowed-cert.pub"),
+            "--path",
+            &p("client-config"),
+            "--write",
+        ],
+    )?;
+    require(
+        fs::metadata(p("client-config"))?.permissions().mode() & 0o777 == 0o600,
+        "client config not private",
+    )?;
     let allowed = ssh("allowed", Some("allowed-cert.pub"), "id -un")?;
     require(
         allowed.status.success() && String::from_utf8(allowed.stdout)?.trim() == "qaallowed",
