@@ -222,6 +222,15 @@ fn main() -> Result<()> {
     }
     wait_health()?;
     let before = identity()?;
+    if version()? == candidate {
+        require(sha(BIN)? == "60664012ba7b7b3a7c3ece05975de582caa9b6cc207a4f1b3ce535f17d3c2fa8", "fresh baseline is not the exact qualified qa5 executable")?;
+        run("apt-get", &["update", "--error-on=any"])?;
+        let (path, digest) = plan("0.1.0")?;
+        apply(&path, &digest)?;
+        wait_health()?;
+        require(identity()? == before && version()? == "0.1.0", "signed baseline preparation changed identity or version")?;
+        println!("FUNGOS_MYCELIUM_SIGNED_APT_BASELINE_DOWNGRADE_VERIFIED");
+    }
     let baseline_sha = sha(BIN)?;
     require(version()? == "0.1.0", "unexpected baseline version")?;
     run("apt-get", &["update", "--error-on=any"])?;
