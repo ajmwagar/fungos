@@ -286,6 +286,14 @@ fn proof() -> Result<()> {
         fs::metadata(p("client-config"))?.permissions().mode() & 0o777 == 0o600,
         "client config not private",
     )?;
+    // Repair mode-only drift left by older enrollment under UMask=0077.
+    for directory in ["/etc/ssh/mycelium", "/etc/ssh/mycelium/principals"] {
+        fs::set_permissions(directory, fs::Permissions::from_mode(0o700))?;
+    }
+    run(
+        CLI,
+        &["access", "ssh", "host-policy", "reconcile", "--write"],
+    )?;
     let allowed = ssh("allowed", Some("allowed-cert.pub"), "id -un")?;
     require(
         allowed.status.success() && String::from_utf8(allowed.stdout)?.trim() == "qaallowed",
