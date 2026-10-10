@@ -160,3 +160,29 @@ portability finding, not permission to copy a certificate around the CLI or
 weaken host authentication. Allowed SSH and revocation gates remain unverified.
 The failed test cleanly powered off, retained its private error/journal, and
 all owned QEMUs and inspection loops were stopped/detached.
+
+Follow-up source fixes `7cc9b47`, `afc480f` and `10a3c18` stage atomic SSH
+outputs beside their destination and make public policy directories traversable
+under `UMask=0077`, including mode-only drift reconciliation. Clean Linux
+`cargo check` and all 68 CLI tests passed. The genuine static amd64 candidate is
+`0.1.0+qualification5`, exact source
+`10a3c18ebea8b9f3f7be981657957ac10a5a2f16`, package SHA-256
+`db6c2e929b127fa89146175ff063fb0bf43c1785ef9a08a398aee4230b218daa`,
+executable SHA-256
+`60664012ba7b7b3a7c3ece05975de582caa9b6cc207a4f1b3ce535f17d3c2fa8`.
+
+Private `access-v5` installed that genuine package through APT and exercised
+mode-only reconciliation. Its managed policy directories were root-owned
+`0755` and the mapped principals matched the issued certificate. Certificate
+SSH still correctly rejected the inherited OS ancestors: `/`, `/etc` and
+`/etc/ssh` were owned by UID/GID 1000 with mode `0775`. A possible installer
+overlay metadata defect is being investigated; this is not dismissed as an
+external fixture issue. No broad ownership repair was applied to obtain a pass.
+The access-image helper now refuses unsafe OS ancestors before qualification.
+Final allowed/denied/revoked SSH proof awaits a correctly owned, freshly
+installer-produced substrate. Failed guests powered off cleanly and their
+read-only inspection loops were detached.
+
+The private proof's readiness check now requires a successful daemon RPC:
+`daemon status` is informational and may exit successfully for “not running.”
+This fixes a test-harness restart race, not a claimed daemon runtime defect.
