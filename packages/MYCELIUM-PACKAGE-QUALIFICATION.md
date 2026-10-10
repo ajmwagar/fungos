@@ -138,3 +138,25 @@ getty reset the proof's stdout. The final run uses normal APT local-file install
 with no external connectivity and writes its evidence to the retained journal.
 The Debian AF_VSOCK SSH generator warning remains a baseline finding and is not
 silently treated as a clean whole-system health result.
+
+## Personal access gate: blocked finding, 2026-10-10
+
+Separate private access proof helpers clone the already-qualified test disk;
+they never use production authorities. Source `5d3ce25` requires an exact access
+QA DMI marker, authenticates only over loopback with a pinned SSH host key, and
+forbids agent, password, keyboard-interactive and raw-key fallback. It exercises
+signed grants through the public CLI, role-derived host policy reconciliation,
+same-CA ungranted and wrong-role certificate denial, then signed revocation and
+denial of the previously allowed certificate.
+
+The genuine `138feeb` runtime in private `access-v2` verified
+`FUNGOS_PEER_ENROLLMENT_NO_PERSONAL_ACCESS_VERIFIED`: the enrolled peer had no
+personal grant or mapped account and could not authenticate personally.
+The subsequent public certificate issuance failed with
+`Cross-device link (os error 18)` installing `allowed-cert.pub`. The CLI stages
+the generated certificate in `/tmp`, then renames it into persistent `/var/lib`;
+the guest uses a separate `/tmp` filesystem. This is a real atomic-install
+portability finding, not permission to copy a certificate around the CLI or
+weaken host authentication. Allowed SSH and revocation gates remain unverified.
+The failed test cleanly powered off, retained its private error/journal, and
+all owned QEMUs and inspection loops were stopped/detached.
