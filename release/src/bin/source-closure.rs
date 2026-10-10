@@ -287,7 +287,7 @@ fn resolve_initrd(requirements: &Path, lists: &Path, output: &Path) -> Result<()
         if !entry.file_type()?.is_file() || !entry.file_name().to_string_lossy().contains("Sources") { continue; }
         let data = run("/usr/lib/apt/apt-helper", &["cat-file".into(), entry.path().to_str().ok_or("non UTF8 index")?.into()], None)?;
         for stanza in data.split("\n\n") {
-            let field = |name: &str| stanza.lines().find_map(|line| line.strip_prefix(&format!("{name}: ")));
+            let field = |name: &str| folded_field(stanza, name);
             if let (Some(name), Some(version), Some(binaries)) = (field("Package"), field("Version"), field("Binary")) {
                 for binary in binaries.split(',').map(str::trim) {
                     mappings.insert((binary.to_owned(), version.to_owned(), name.to_owned()));
@@ -315,8 +315,23 @@ fn bin_nmu_source_version(version: &str) -> &str {
         _ => version,
     }
 }
+fn folded_field(stanza: &str, name: &str) -> Option<String> {
+    let prefix = format!("{name}: ");
+    let mut lines = stanza.lines();
+    let mut value = lines.find_map(|line| line.strip_prefix(&prefix)).map(str::to_owned)?;
+    for line in lines {
+        if !line.starts_with([' ', '\t']) { break; }
+        value.push(' ');
+        value.push_str(line.trim());
+    }
+    Some(value)
+}
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn retains_folded_binary_names_in_signed_source_indexes() {
+        assert_eq!(super::folded_field("Package: linux\nBinary: headers,\n ata-modules, kernel\nVersion: 1\n", "Binary"), Some("headers, ata-modules, kernel".into()));
+    }
     #[test]
     fn strips_only_final_numeric_bin_nmu() {
         assert_eq!(super::bin_nmu_source_version("1:1.2+b3"), "1:1.2");
