@@ -44,7 +44,15 @@ Retained source archive SHA-256:
 DSC SHA-256:
 `c37e94ec74ce8962c1ff7d3c0e0c406a197399bfa5157827dd2df798a992c765`.
 
-Current preparation is explicitly incomplete: source resolution, complete
-bootloader/firmware coverage and the owner toolchain/native-source closure remain
-unqualified. Actual archives are retained privately on the approved build host;
+For the retained older qualification ISO and installed inventory, corrected
+package/initrd requirements contain 425 unique source/version pairs. All 425
+were actually downloaded through isolated signed APT: 422 in the initial
+collection, then exact Debian Installer, bogl and libdebian-installer archives.
+The initial unresolved-binary list is not evidence that those sources are absent.
+Its false missing entries are superseded by the signed-index identity resolution.
+
+Current release preparation is explicitly incomplete: the final rebuilt image's
+inventory must be reconciled, raw bootloader/firmware coverage and notices audited,
+and the owner toolchain/native-source closure completed. Actual archives are
+retained privately on the approved build host;
 no public source bundle or release torrent is approved by this note.
