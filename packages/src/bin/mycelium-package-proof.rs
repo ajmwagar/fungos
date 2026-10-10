@@ -293,6 +293,12 @@ fn installed_version() -> Result<String> {
         .to_owned())
 }
 fn main() -> Result<()> {
+    let args: Vec<_> = std::env::args().skip(1).collect();
+    require(
+        args.is_empty() || args == ["--preinstalled"],
+        "unknown qualification mode",
+    )?;
+    let preinstalled = !args.is_empty();
     require(command("id", &["-u"])?.trim() == "0", "root required")?;
     require(
         fs::read_to_string("/sys/class/dmi/id/product_name")?.trim()
@@ -354,7 +360,18 @@ fn main() -> Result<()> {
         .is_ok(),
         "upgrade version is not newer",
     )?;
-    command("apt-get", &["-y", "install", &a])?;
+    if preinstalled {
+        require(
+            installed_version()? == first_version.trim(),
+            "installer package version mismatch",
+        )?;
+        require(
+            digest(BINARY)? == fungos_apt_repository::QUALIFIED_MYCELIUM_AMD64_SHA256,
+            "installer executable is not qualified source138feeb",
+        )?;
+    } else {
+        command("apt-get", &["-y", "install", &a])?;
+    }
     command("systemctl", &["daemon-reload"])?;
     let initial = owned()?;
     command(BINARY, &["_self-check"])?;
@@ -396,6 +413,11 @@ fn main() -> Result<()> {
         "repair changed identity or owned files",
     )?;
     println!("FUNGOS_MYCELIUM_PACKAGE_REPAIR_VERIFIED");
+    if preinstalled {
+        private(STATE, material.as_bytes())?;
+        println!("FUNGOS_MYCELIUM_PREINSTALLED_CLAIM_AWAITING_REBOOT");
+        return command("systemctl", &["poweroff"]).map(|_| ());
+    }
     command("apt-get", &["-y", "install", &b])?;
     command("systemctl", &["daemon-reload"])?;
     command("systemctl", &["restart", "mycelium.service"])?;
@@ -407,10 +429,7 @@ fn main() -> Result<()> {
     require(identity()? == material, "upgrade changed private state")?;
     owned()?;
     println!("FUNGOS_MYCELIUM_REAL_DEB_UPGRADE_VERIFIED");
-    command(
-        "apt-get",
-        &["-y", "--allow-downgrades", "install", &a],
-    )?;
+    command("apt-get", &["-y", "--allow-downgrades", "install", &a])?;
     command("systemctl", &["daemon-reload"])?;
     command("systemctl", &["restart", "mycelium.service"])?;
     active()?;

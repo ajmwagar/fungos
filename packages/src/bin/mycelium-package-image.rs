@@ -31,9 +31,13 @@ fn regular(path: &Path) -> bool {
     fs::symlink_metadata(path).is_ok_and(|m| m.is_file())
 }
 fn main() -> Result<()> {
-    let args: Vec<_> = std::env::args().skip(1).collect();
+    let mut args: Vec<_> = std::env::args().skip(1).collect();
+    let preinstalled = args.first().is_some_and(|value| value == "--preinstalled");
+    if preinstalled {
+        args.remove(0);
+    }
     if args.len() != 5 {
-        return Err("usage: mycelium-package-image QUALIFICATION_QCOW2 NEW_OUTPUT_DIR PACKAGE_A PACKAGE_B PROOF_BINARY".into());
+        return Err("usage: mycelium-package-image [--preinstalled] QUALIFICATION_QCOW2 NEW_OUTPUT_DIR PACKAGE_A PACKAGE_B PROOF_BINARY".into());
     }
     if run("id", &["-u"])?.trim() != "0" {
         return Err("root required for disposable image assembly".into());
@@ -79,7 +83,7 @@ fn main() -> Result<()> {
             .join("usr/share/fungos/installer/installed.tsv")
             .is_file()
             || root.join("var/lib/mycelium").exists()
-            || root.join("usr/bin/mycelium").exists()
+            || root.join("usr/bin/mycelium").exists() != preinstalled
         {
             return Err("input is not an unenrolled fungOS installer qualification disk".into());
         }
@@ -121,6 +125,9 @@ fn main() -> Result<()> {
         )?;
         put(&root, "etc/systemd/network/10-package-proof.network", "[Match]\nName=qa0\n[Link]\nRequiredForOnline=yes\n[Network]\nAddress=192.0.2.1/32\nLinkLocalAddressing=no\nConfigureWithoutCarrier=yes\n")?;
         put(&root, "usr/lib/systemd/system/fungos-mycelium-package-proof.service", "[Unit]\nDescription=Private disposable Mycelium package qualification\nAfter=network-online.target\nWants=network-online.target\nConditionVirtualization=yes\n\n[Service]\nType=oneshot\nExecStart=/opt/fungos-mycelium-package-qa/proof\nTimeoutStartSec=240\nUMask=0077\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n")?;
+        if preinstalled {
+            put(&root, "etc/systemd/system/fungos-mycelium-package-proof.service.d/10-preinstalled.conf", "[Service]\nExecStart=\nExecStart=/opt/fungos-mycelium-package-qa/proof --preinstalled\n")?;
+        }
         run(
             "chroot",
             &[

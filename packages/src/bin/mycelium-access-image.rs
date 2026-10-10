@@ -79,7 +79,8 @@ fn main() -> Result<()> {
             "sha256sum",
             &[root.join("usr/bin/mycelium").to_str().ok_or("UTF8")?],
         )?;
-        if !binary.starts_with("6956b35956332a897ba7f398e019113b91b6f211bb0ce657e266ab54b11733fa ")
+        if binary.split_whitespace().next()
+            != Some(fungos_apt_repository::QUALIFIED_MYCELIUM_AMD64_SHA256)
         {
             return Err("not the qualified source138feeb package executable".into());
         }
