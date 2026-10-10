@@ -104,7 +104,7 @@ fn active() -> Result<()> {
         "daemon inactive",
     )?;
     let until = Instant::now() + Duration::from_secs(30);
-    while command(BINARY, &["daemon", "status"]).is_err() {
+    while command(BINARY, &["access", "list", "--json"]).is_err() {
         require(Instant::now() < until, "daemon did not become healthy")?;
         thread::sleep(Duration::from_millis(100));
     }
