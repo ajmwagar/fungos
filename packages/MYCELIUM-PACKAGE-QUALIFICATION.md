@@ -28,11 +28,14 @@ commit, Debian package/version/architecture/SHA-256 and complete test logs.
    peer signing, Iroh endpoint and certificate identity; preserve owned-file
    digests. Reject an incompatible state path or missing native package/unit
    before copying a binary or writing identity/configuration.
-4. **Ownership enforcement:** attempt native self-update and native rollback
-   against the package-owned executable. Both must reject before changing the
-   executable, unit, package state or native activation/backup state. A dry-run
-   refusal alone is not enough: exercise the real explicit-write path using a
-   valid isolated signed release. Do not authorize native automatic activation
+4. **Ownership enforcement:** attempt native self-update against the
+   package-owned executable. It must reject before changing the executable,
+   unit, package state or native activation/backup state. Exercise the real
+   explicit-write path, including a destination symlink/alias, using a valid
+   isolated signed release. The underlying activation entry point must enforce
+   the same guard before any backup/failed-health rollback path can run. There
+   is no public native rollback CLI command; rejection of an unknown command
+   proves nothing about ownership. Do not authorize native automatic activation
    for this APT-owned component.
 5. **Real Debian lifecycle:** install a second genuine owner package version,
    then explicitly restart the native service. Check Debian's installed version,
