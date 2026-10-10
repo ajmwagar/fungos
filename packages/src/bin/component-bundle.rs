@@ -23,7 +23,12 @@ fn hex(value: &str, length: usize) -> bool {
             .all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase())
 }
 
+#[cfg(test)]
 fn parse(input: &str) -> Result<Vec<Component<'_>>> {
+    parse_for(input, false)
+}
+
+fn parse_for(input: &str, mycelium_only: bool) -> Result<Vec<Component<'_>>> {
     let mut components = Vec::new();
     let mut names = BTreeSet::new();
     let mut files = BTreeSet::new();
@@ -76,8 +81,13 @@ fn parse(input: &str) -> Result<Vec<Component<'_>>> {
         }
         components.push(c);
     }
-    if names != BTreeSet::from(["mycelium", "unibus-core"]) {
-        return Err("headless-edge is missing a required runtime component".into());
+    let required = if mycelium_only {
+        BTreeSet::from(["mycelium"])
+    } else {
+        BTreeSet::from(["mycelium", "unibus-core"])
+    };
+    if names != required {
+        return Err("bundle does not match the explicitly requested component set".into());
     }
     if components.iter().any(|c| c.arch != components[0].arch) {
         return Err("component architectures disagree".into());
@@ -97,11 +107,11 @@ fn run(program: &str, arguments: &[&str]) -> Result<String> {
     Ok(String::from_utf8(output.stdout)?)
 }
 
-fn verify(manifest: &str, directory: &Path) -> Result<()> {
+fn verify(manifest: &str, directory: &Path, mycelium_only: bool) -> Result<()> {
     if !fs::symlink_metadata(directory)?.file_type().is_dir() {
         return Err("component bundle must be a real directory".into());
     }
-    for c in parse(manifest)? {
+    for c in parse_for(manifest, mycelium_only)? {
         let path = directory.join(c.file);
         if !fs::symlink_metadata(&path)?.file_type().is_file() {
             return Err("package must be a regular file, not a symlink".into());
@@ -169,9 +179,9 @@ fn verify(manifest: &str, directory: &Path) -> Result<()> {
     Ok(())
 }
 
-fn checksums(contents: &str, directory: &Path) -> Result<String> {
+fn checksums(contents: &str, directory: &Path, mycelium_only: bool) -> Result<String> {
     let mut sums = String::new();
-    for file in parse(contents)?
+    for file in parse_for(contents, mycelium_only)?
         .into_iter()
         .map(|c| c.file)
         .chain(std::iter::once("components.tsv"))
@@ -189,46 +199,48 @@ fn checksums(contents: &str, directory: &Path) -> Result<String> {
 fn main() -> Result<()> {
     let args: Vec<_> = env::args().skip(1).collect();
     match args.as_slice() {
-        [mode, bundle] if mode == "verify" => {
+        [mode, bundle] if mode == "verify" || mode == "verify-mycelium-qualification" => {
+            let mycelium_only = mode == "verify-mycelium-qualification";
             let directory = Path::new(bundle);
             let manifest = fs::read_to_string(directory.join("components.tsv"))?;
-            verify(&manifest, directory)?;
-            if fs::read_to_string(directory.join("SHA256SUMS"))? != checksums(&manifest, directory)?
+            verify(&manifest, directory, mycelium_only)?;
+            if fs::read_to_string(directory.join("SHA256SUMS"))? != checksums(&manifest, directory, mycelium_only)?
             {
                 return Err("component bundle checksum inventory mismatch".into());
             }
         }
-        [mode, manifest, output] if mode == "prepare" => {
+        [mode, manifest, output] if mode == "prepare" || mode == "prepare-mycelium-qualification" => {
+            let mycelium_only = mode == "prepare-mycelium-qualification";
             let input = Path::new(manifest);
             let mut contents = fs::read_to_string(input)?;
             if !contents.ends_with('\n') {
                 contents.push('\n');
             }
             let source = input.parent().ok_or("manifest has no parent")?;
-            verify(&contents, source)?;
+            verify(&contents, source, mycelium_only)?;
             let destination = Path::new(output);
             fs::create_dir(destination)?; // Never overwrite an existing generation.
-            for component in parse(&contents)? {
+            for component in parse_for(&contents, mycelium_only)? {
                 fs::copy(
                     source.join(component.file),
                     destination.join(component.file),
                 )?;
             }
             fs::write(destination.join("components.tsv"), &contents)?;
-            verify(&contents, destination)?;
+            verify(&contents, destination, mycelium_only)?;
             fs::write(
                 destination.join("SHA256SUMS"),
-                checksums(&contents, destination)?,
+                checksums(&contents, destination, mycelium_only)?,
             )?;
         }
         _ => {
             return Err(
-                "usage: component-bundle prepare INPUT.tsv NEW_DIRECTORY | verify BUNDLE_DIRECTORY"
+                "usage: component-bundle prepare[-mycelium-qualification] INPUT.tsv NEW_DIRECTORY | verify[-mycelium-qualification] BUNDLE_DIRECTORY"
                     .into(),
             )
         }
     }
-    println!("verified owner-built headless-edge components (APT ownership)");
+    println!("verified explicitly selected owner-built components (APT ownership)");
     Ok(())
 }
 
@@ -249,6 +261,16 @@ mod tests {
     #[test]
     fn rejects_missing_component() {
         assert!(parse(manifest().lines().next().unwrap()).is_err());
+    }
+    #[test]
+    fn qualification_requires_exactly_mycelium_without_weakening_full_bundle() {
+        let input = manifest();
+        let one = input.lines().next().unwrap();
+        assert_eq!(parse_for(one, true).unwrap().len(), 1);
+        assert!(parse(one).is_err());
+        assert!(parse_for(&input, true).is_err());
+        assert!(parse_for(input.lines().nth(1).unwrap(), true).is_err());
+        assert!(parse_for("", true).is_err());
     }
     #[test]
     fn rejects_dual_ownership() {

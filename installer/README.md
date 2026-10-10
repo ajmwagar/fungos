@@ -3,6 +3,14 @@
 Final-image gates and digest-bound preparatory evidence are in
 [QUALIFICATION.md](QUALIFICATION.md).
 
+An explicit Mycelium-only qualification payload is supported by the shared
+[component gate](../packages/COMPONENTS.md). Supply its verified bundle plus
+the fourth argument `mycelium-qualification`. Normal component builds still
+require Mycelium **and** Unibus. The narrow mode enables only the Mycelium unit
+and labels its manifest accordingly; it does not claim a full headless-edge
+runtime release. Private enrollment and person access remain post-install
+qualification, never public ISO contents.
+
 This is a Debian 13 installer delivery wrapper, not a second operating-system
 package pipeline. It resolves `base/profiles/headless-edge.capabilities`, applies
 the common `base/rootfs` configuration, and converges Debian packages to the

@@ -19,7 +19,11 @@ if [ -d "$payload/components" ]; then
   apt-get install -y --no-install-recommends "$payload"/components/*.deb
   mkdir -p /usr/share/fungos/components
   cp "$payload/components/components.tsv" "$payload/components/SHA256SUMS" /usr/share/fungos/components/
-  systemctl enable mycelium.service unibus-router.service
+  case "$(cat "$payload/runtime-components")" in
+    owner-debs) systemctl enable mycelium.service unibus-router.service ;;
+    mycelium-only-qualification) systemctl enable mycelium.service ;;
+    *) echo 'unknown component purpose; refusing service activation' >&2; exit 1 ;;
+  esac
 fi
 cp -a "$payload/rootfs/." /
 chmod 0755 /usr/libexec/fungos-first-contact /usr/libexec/fungos-verify-update

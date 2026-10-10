@@ -8,6 +8,16 @@ because somebody supplied its checksum.
 
 Run on Linux with `dpkg-deb` and `sha256sum`:
 
+For isolated Mycelium qualification while Unibus remains separate, explicitly
+use `prepare-mycelium-qualification` and `verify-mycelium-qualification` instead
+of `prepare` and `verify`. This requires exactly the genuine Mycelium package;
+the normal full-bundle commands still reject a missing Unibus package.
+Pass `mycelium-qualification` as the install builder's fourth argument:
+`sh installer/build.sh debian.iso qa.iso /new/mycelium-bundle mycelium-qualification`.
+The ISO records `runtime_components=mycelium-only-qualification`; it is not a
+complete operational headless-edge release. Checksums and package provenance
+validation are identical; no enrollment claim or private authority is embedded.
+
 ```sh
 cargo check --locked --manifest-path packages/Cargo.toml --bin component-bundle
 cargo test --locked --manifest-path packages/Cargo.toml --bin component-bundle

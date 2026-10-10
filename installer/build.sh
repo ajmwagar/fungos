@@ -5,7 +5,7 @@ installer_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 base_dir="$installer_dir/../base"
 . "$base_dir/config/release.env"
 [ "$DEBIAN_SUITE" = trixie ] || { echo 'installer requires the shared trixie baseline; refresh base/config/release.env before building' >&2; exit 1; }
-[ "$#" = 2 ] || [ "$#" = 3 ] || { echo 'usage: build.sh VERIFIED_DEBIAN_ISO NEW_OUTPUT_ISO [VERIFIED_COMPONENT_BUNDLE]' >&2; exit 2; }
+[ "$#" = 2 ] || [ "$#" = 3 ] || { [ "$#" = 4 ] && [ "$4" = mycelium-qualification ]; } || { echo 'usage: build.sh VERIFIED_DEBIAN_ISO NEW_OUTPUT_ISO [VERIFIED_COMPONENT_BUNDLE [mycelium-qualification]]' >&2; exit 2; }
 input=$(realpath "$1")
 output=$(realpath -m "$2")
 [ -f "$input" ] && [ ! -e "$output" ] || { echo 'input missing or output exists' >&2; exit 1; }
@@ -25,10 +25,12 @@ source_commit=${SOURCE_COMMIT:-$(git -C "$installer_dir" rev-parse HEAD)}
 case "$source_commit" in *[!0-9a-f]*) echo 'SOURCE_COMMIT must be lowercase hexadecimal' >&2; exit 1 ;; esac
 cp "$base_dir/config/release.env" "$installer_dir/apply.sh" "$work/fungos/"
 runtime_components=absent
-if [ "$#" = 3 ]; then
+if [ "$#" -ge 3 ]; then
   component_tool=${FUNGOS_COMPONENT_TOOL:-"$installer_dir/../packages/target/release/component-bundle"}
   [ -x "$component_tool" ] || { echo 'build the Rust component-bundle verifier first' >&2; exit 1; }
-  "$component_tool" verify "$3"
+  verification=verify
+  if [ "$#" = 4 ]; then verification=verify-mycelium-qualification; fi
+  "$component_tool" "$verification" "$3"
   (cd "$3" && sha256sum -c SHA256SUMS)
   # Only copy validated filenames, not unrelated files from the build directory.
   mkdir "$work/fungos/components"
@@ -39,6 +41,8 @@ if [ "$#" = 3 ]; then
     cp "$3/$file" "$work/fungos/components/$file"
   done < "$3/components.tsv"
   runtime_components=owner-debs
+  if [ "$#" = 4 ]; then runtime_components=mycelium-only-qualification; fi
+  printf '%s\n' "$runtime_components" > "$work/fungos/runtime-components"
 fi
 "$base_dir/scripts/resolve-packages.sh" "$base_dir/profiles/headless-edge.capabilities" > "$work/fungos/packages"
 cp "$installer_dir/interactive.preseed" "$work/fungos/interactive.preseed"
@@ -60,7 +64,7 @@ sha256sum "$output" > "$output.sha256"
 {
   echo "profile=headless-edge"
   echo "runtime_components=$runtime_components"
-  if [ "$runtime_components" = owner-debs ]; then
+  if [ "$runtime_components" != absent ]; then
     echo "component_manifest_sha256=$(sha256sum "$work/fungos/components/components.tsv" | cut -d' ' -f1)"
   fi
   echo "debian_suite=$DEBIAN_SUITE"
