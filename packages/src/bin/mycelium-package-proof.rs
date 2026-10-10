@@ -354,7 +354,7 @@ fn main() -> Result<()> {
         .is_ok(),
         "upgrade version is not newer",
     )?;
-    command("apt-get", &["-y", "--no-download", "install", &a])?;
+    command("apt-get", &["-y", "install", &a])?;
     command("systemctl", &["daemon-reload"])?;
     let initial = owned()?;
     command(BINARY, &["_self-check"])?;
@@ -396,7 +396,7 @@ fn main() -> Result<()> {
         "repair changed identity or owned files",
     )?;
     println!("FUNGOS_MYCELIUM_PACKAGE_REPAIR_VERIFIED");
-    command("apt-get", &["-y", "--no-download", "install", &b])?;
+    command("apt-get", &["-y", "install", &b])?;
     command("systemctl", &["daemon-reload"])?;
     command("systemctl", &["restart", "mycelium.service"])?;
     active()?;
@@ -409,7 +409,7 @@ fn main() -> Result<()> {
     println!("FUNGOS_MYCELIUM_REAL_DEB_UPGRADE_VERIFIED");
     command(
         "apt-get",
-        &["-y", "--allow-downgrades", "--no-download", "install", &a],
+        &["-y", "--allow-downgrades", "install", &a],
     )?;
     command("systemctl", &["daemon-reload"])?;
     command("systemctl", &["restart", "mycelium.service"])?;
