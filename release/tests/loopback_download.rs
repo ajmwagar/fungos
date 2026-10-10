@@ -25,6 +25,16 @@ fn run(program: &str, args: &[&str]) -> String {
 struct Scratch(PathBuf);
 impl Drop for Scratch {
     fn drop(&mut self) {
+        if std::thread::panicking() {
+            eprintln!("retained synthetic transfer diagnostics: {}", self.0.display());
+            for name in ["seed-state.log", "download-state.log"] {
+                if let Ok(log) = fs::read_to_string(self.0.join(name)) {
+                    let tail: Vec<_> = log.lines().rev().take(30).collect();
+                    eprintln!("{name}:\n{}", tail.into_iter().rev().collect::<Vec<_>>().join("\n"));
+                }
+            }
+            return;
+        }
         let _ = fs::remove_dir_all(&self.0);
     }
 }
