@@ -45,7 +45,9 @@ fn key(name: &str) -> Result<()> {
 }
 fn healthy() -> Result<()> {
     let until = Instant::now() + Duration::from_secs(30);
-    while output(CLI, &["daemon", "status"])?.status.success() == false {
+    // `daemon status` deliberately exits successfully for "not running".
+    // Require a real daemon request, not that informational command's status.
+    while !output(CLI, &["access", "list", "--json"])?.status.success() {
         require(Instant::now() < until, "native daemon unhealthy")?;
         thread::sleep(Duration::from_millis(100));
     }
