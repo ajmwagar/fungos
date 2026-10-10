@@ -289,8 +289,17 @@ fn proof() -> Result<()> {
     let allowed = ssh("allowed", Some("allowed-cert.pub"), "id -un")?;
     require(
         allowed.status.success() && String::from_utf8(allowed.stdout)?.trim() == "qaallowed",
-        "mapped certificate SSH failed",
+        &format!(
+            "mapped certificate SSH failed: {}",
+            String::from_utf8_lossy(&allowed.stderr)
+        ),
     )?;
+    for directory in ["/etc/ssh/mycelium", "/etc/ssh/mycelium/principals"] {
+        require(
+            fs::metadata(directory)?.permissions().mode() & 0o777 == 0o755,
+            "public SSH policy not traversable under private unit umask",
+        )?;
+    }
     let groups = run("id", &["-nG", "qaallowed"])?;
     require(
         !groups
