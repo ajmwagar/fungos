@@ -114,6 +114,20 @@ fn daemon(root: &Path, label: &str, rpc: u16, peer: u16, download: &Path) -> Dae
 #[test]
 #[ignore = "requires Transmission4.1 tools; two loopback clients and bounded test tracker"]
 fn empty_client_downloads_matching_bytes_from_loopback_seed() {
+    // Transmission4.1 derives its source address against a global destination.
+    // A fresh network namespace with only lo and a lo-only default route makes
+    // that selection work without permitting any external packet or interface.
+    let interfaces: Vec<_> = fs::read_dir("/sys/class/net")
+        .unwrap()
+        .map(|e| e.unwrap().file_name())
+        .collect();
+    assert_eq!(
+        interfaces,
+        vec![std::ffi::OsString::from("lo")],
+        "run this ignored test with sudo unshare --net; host networking must remain untouched"
+    );
+    run("ip", &["link", "set", "lo", "up"]);
+    run("ip", &["route", "add", "default", "dev", "lo"]);
     let root = std::env::temp_dir().join(format!(
         "fungos-torrent-download-{}-{}",
         std::process::id(),
