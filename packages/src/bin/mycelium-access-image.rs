@@ -1,7 +1,7 @@
 //! Clone only a completed private package QA disk for isolated access checks.
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
+    os::unix::fs::{MetadataExt, PermissionsExt},
     path::{Path, PathBuf},
     process::Command,
 };
@@ -83,11 +83,14 @@ fn main() -> Result<()> {
             "sha256sum",
             &[root.join("usr/bin/mycelium").to_str().ok_or("UTF8")?],
         )?;
-        if binary.split_whitespace().next()
-            != Some(fungos_apt_repository::QUALIFIED_MYCELIUM_AMD64_SHA256)
-        {
-            return Err("not the qualified source138feeb package executable".into());
+        for ancestor in [&root, &root.join("etc"), &root.join("etc/ssh")] {
+            let metadata = fs::metadata(ancestor)?;
+            if metadata.uid() != 0 || metadata.permissions().mode() & 0o022 != 0 {
+                return Err("input OS SSH ancestors are not root-owned/non-writable; fix installer, never patch fixture".into());
+            }
         }
+        let mut qualified_binary = binary.split_whitespace().next()
+            == Some(fungos_apt_repository::QUALIFIED_MYCELIUM_AMD64_SHA256);
         let path = root.join("opt/fungos-access-proof/proof");
         fs::create_dir_all(path.parent().ok_or("parent")?)?;
         fs::copy(&args[2], &path)?;
@@ -111,6 +114,7 @@ fn main() -> Result<()> {
             .next()
             .ok_or("missing binary digest")?
             .to_owned();
+            qualified_binary |= binary.split_whitespace().next() == Some(exec_sha.as_str());
             let package_sha = run("sha256sum", &[package])?
                 .split_whitespace()
                 .next()
@@ -127,6 +131,9 @@ fn main() -> Result<()> {
                 "opt/fungos-access-proof/candidate-binary.sha256",
                 &format!("{exec_sha}\n"),
             )?;
+        }
+        if !qualified_binary {
+            return Err("input executable differs from qualified historical or pinned genuine candidate payload".into());
         }
         run(
             "chroot",
