@@ -258,8 +258,9 @@ fn main() -> Result<()> {
     require(version()? == "0.1.0", "invalid signature changed version")?;
     println!("FUNGOS_MYCELIUM_APT_BAD_SIGNATURE_REJECTED");
     let policy = fs::read(POLICY)?;
-    let changed =
-        String::from_utf8(policy.clone())?.replace("\"timeout_secs\":30", "\"timeout_secs\":29");
+    let changed = String::from_utf8(policy.clone())?
+        .replace("\"timeout_secs\":30", "\"timeout_secs\":29")
+        .replace("\"timeout_secs\": 30", "\"timeout_secs\": 29");
     require(
         changed.as_bytes() != policy,
         "stale plan test did not alter binding",
