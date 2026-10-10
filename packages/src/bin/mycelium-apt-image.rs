@@ -1,7 +1,7 @@
 //! Clone only a retained private package-qualification disk for signed APT proof.
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
+    os::unix::fs::{MetadataExt, PermissionsExt},
     path::{Path, PathBuf},
     process::Command,
 };
@@ -83,6 +83,12 @@ fn main() -> Result<()> {
         return Err(error);
     }
     let prepared = (|| -> Result<()> {
+        for relative in ["", "etc", "etc/ssh"] {
+            let metadata = fs::symlink_metadata(root.join(relative))?;
+            if !metadata.is_dir() || !safe_directory_owner(metadata.uid(), metadata.gid(), metadata.mode()) {
+                return Err(format!("private fixture root ownership/mode invalid: /{relative}").into());
+            }
+        }
         if !root.join("var/lib/fungos-mycelium-package-proof").is_file()
             || !root.join("usr/bin/mycelium").is_file()
             || root.join("var/lib/fungos-mycelium-apt-proof").exists()
@@ -151,8 +157,17 @@ fn main() -> Result<()> {
     println!("assembled private signed APT image: {}", image.display());
     Ok(())
 }
+fn safe_directory_owner(uid: u32, gid: u32, mode: u32) -> bool {
+    uid == 0 && gid == 0 && mode & 0o022 == 0
+}
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn rejects_builder_owned_or_writable_ancestors() {
+        assert!(super::safe_directory_owner(0, 0, 0o755));
+        assert!(!super::safe_directory_owner(1000, 1000, 0o755));
+        assert!(!super::safe_directory_owner(0, 0, 0o775));
+    }
     #[test]
     fn refuses_devices() {
         assert!(!super::regular(std::path::Path::new("/dev/null")));
