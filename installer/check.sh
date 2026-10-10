@@ -2,6 +2,9 @@
 set -eu
 dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 for file in "$dir"/*.sh; do sh -n "$file"; done
+if sh "$dir/build.sh" absent.iso absent-output.iso absent-bundle unknown-mode >/dev/null 2>&1; then
+  echo 'unknown component mode accepted' >&2; exit 1
+fi
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 if sh "$dir/qemu-proof.sh" nonexistent.iso "$tmp/proof" unsupported > "$tmp/firmware.log" 2>&1; then
