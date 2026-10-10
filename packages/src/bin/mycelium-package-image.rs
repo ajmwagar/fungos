@@ -113,6 +113,13 @@ fn main() -> Result<()> {
             "etc/systemd/journald.conf.d/90-package-proof.conf",
             "[Journal]\nStorage=persistent\n",
         )?;
+        // Satisfy the real online dependency without any NIC/backend or route.
+        put(
+            &root,
+            "etc/systemd/network/10-package-proof.netdev",
+            "[NetDev]\nName=qa0\nKind=dummy\n",
+        )?;
+        put(&root, "etc/systemd/network/10-package-proof.network", "[Match]\nName=qa0\n[Link]\nRequiredForOnline=yes\n[Network]\nAddress=192.0.2.1/32\nLinkLocalAddressing=no\nConfigureWithoutCarrier=yes\n")?;
         put(&root, "usr/lib/systemd/system/fungos-mycelium-package-proof.service", "[Unit]\nDescription=Private disposable Mycelium package qualification\nAfter=network-online.target\nWants=network-online.target\nConditionVirtualization=yes\n\n[Service]\nType=oneshot\nExecStart=/opt/fungos-mycelium-package-qa/proof\nTimeoutStartSec=240\nUMask=0077\nStandardOutput=tty\nStandardError=tty\nTTYPath=/dev/ttyS0\n\n[Install]\nWantedBy=multi-user.target\n")?;
         run(
             "chroot",
