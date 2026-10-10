@@ -150,6 +150,31 @@ fn proof() -> Result<()> {
         "refusing reused access proof state",
     )?;
     std::env::set_var("MYCELIUM_HOME", "/var/lib/mycelium");
+    let candidate = "/opt/fungos-access-proof/candidate.deb";
+    if Path::new(candidate).is_file() {
+        let sha = run("sha256sum", &[candidate])?;
+        require(
+            sha.split_whitespace().next()
+                == Some(fs::read_to_string("/opt/fungos-access-proof/candidate.sha256")?.trim()),
+            "candidate package digest mismatch",
+        )?;
+        run("apt-get", &["-y", "install", candidate])?;
+        run("systemctl", &["daemon-reload"])?;
+        run("systemctl", &["restart", "mycelium.service"])?;
+        let binary_sha = run("sha256sum", &[CLI])?;
+        require(
+            binary_sha.split_whitespace().next()
+                == Some(
+                    fs::read_to_string("/opt/fungos-access-proof/candidate-binary.sha256")?.trim(),
+                ),
+            "candidate executable does not match package payload",
+        )?;
+        require(
+            run("dpkg-query", &["-S", CLI])?.trim() == "mycelium: /usr/bin/mycelium",
+            "candidate not package owned",
+        )?;
+        println!("FUNGOS_ACCESS_GENUINE_CANDIDATE_INSTALLED");
+    }
     healthy()?;
     let state = run(CLI, &["access", "list", "--json"])?;
     require(

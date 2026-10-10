@@ -24,10 +24,14 @@ fn regular(path: &str) -> bool {
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
-    if args.len() != 3 {
-        return Err("usage: mycelium-access-image PRIVATE_QUALIFIED_RAW_DISK NEW_OUTPUT_DIR ACCESS_PROOF_BINARY".into());
+    if args.len() != 3 && args.len() != 4 {
+        return Err("usage: mycelium-access-image PRIVATE_QUALIFIED_RAW_DISK NEW_OUTPUT_DIR ACCESS_PROOF_BINARY [GENUINE_OWNER_DEB]".into());
     }
-    if run("id", &["-u"])?.trim() != "0" || !regular(&args[0]) || !regular(&args[2]) {
+    if run("id", &["-u"])?.trim() != "0"
+        || !regular(&args[0])
+        || !regular(&args[2])
+        || args.get(3).is_some_and(|p| !regular(p))
+    {
         return Err("root and regular nonsymlink inputs required; never host disks".into());
     }
     let out = PathBuf::from(&args[1]);
@@ -88,6 +92,42 @@ fn main() -> Result<()> {
         fs::create_dir_all(path.parent().ok_or("parent")?)?;
         fs::copy(&args[2], &path)?;
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755))?;
+        if let Some(package) = args.get(3) {
+            if run("dpkg-deb", &["-f", package, "Package"])?.trim() != "mycelium"
+                || run("dpkg-deb", &["-f", package, "Architecture"])?.trim() != "amd64"
+            {
+                return Err("candidate is not the genuine amd64 owner package".into());
+            }
+            let extracted = out.join("candidate-payload");
+            run(
+                "dpkg-deb",
+                &["-x", package, extracted.to_str().ok_or("UTF8")?],
+            )?;
+            let exec_sha = run(
+                "sha256sum",
+                &[extracted.join("usr/bin/mycelium").to_str().ok_or("UTF8")?],
+            )?
+            .split_whitespace()
+            .next()
+            .ok_or("missing binary digest")?
+            .to_owned();
+            let package_sha = run("sha256sum", &[package])?
+                .split_whitespace()
+                .next()
+                .ok_or("missing package digest")?
+                .to_owned();
+            fs::copy(package, root.join("opt/fungos-access-proof/candidate.deb"))?;
+            put(
+                &root,
+                "opt/fungos-access-proof/candidate.sha256",
+                &format!("{package_sha}\n"),
+            )?;
+            put(
+                &root,
+                "opt/fungos-access-proof/candidate-binary.sha256",
+                &format!("{exec_sha}\n"),
+            )?;
+        }
         run(
             "chroot",
             &[
