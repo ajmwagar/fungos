@@ -107,7 +107,13 @@ fn main() -> Result<()> {
         }
         fs::copy(&args[4], qa.join("proof"))?;
         fs::set_permissions(qa.join("proof"), fs::Permissions::from_mode(0o755))?;
-        put(&root, "usr/lib/systemd/system/fungos-mycelium-package-proof.service", "[Unit]\nDescription=Private disposable Mycelium package qualification\nAfter=network-online.target\nWants=network-online.target\nConditionVirtualization=kvm\n\n[Service]\nType=oneshot\nExecStart=/opt/fungos-mycelium-package-qa/proof\nTimeoutStartSec=240\nUMask=0077\nStandardOutput=journal+console\nStandardError=journal+console\n\n[Install]\nWantedBy=multi-user.target\n")?;
+        fs::create_dir_all(root.join("var/log/journal"))?;
+        put(
+            &root,
+            "etc/systemd/journald.conf.d/90-package-proof.conf",
+            "[Journal]\nStorage=persistent\n",
+        )?;
+        put(&root, "usr/lib/systemd/system/fungos-mycelium-package-proof.service", "[Unit]\nDescription=Private disposable Mycelium package qualification\nAfter=network-online.target\nWants=network-online.target\nConditionVirtualization=yes\n\n[Service]\nType=oneshot\nExecStart=/opt/fungos-mycelium-package-qa/proof\nTimeoutStartSec=240\nUMask=0077\nStandardOutput=tty\nStandardError=tty\nTTYPath=/dev/ttyS0\n\n[Install]\nWantedBy=multi-user.target\n")?;
         run(
             "chroot",
             &[
