@@ -53,7 +53,9 @@ impl Drop for Tracker {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::SeqCst);
         if let Some(worker) = self.worker.take() {
-            worker.join().unwrap();
+            if worker.join().is_err() {
+                eprintln!("test tracker failed; preserving primary transfer failure during cleanup");
+            }
         }
     }
 }
