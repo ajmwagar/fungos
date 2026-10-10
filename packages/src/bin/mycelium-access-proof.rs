@@ -115,6 +115,8 @@ fn ssh(name: &str, certificate: Option<&str>, command: &str) -> Result<Output> {
         "-o".into(),
         "PreferredAuthentications=publickey".into(),
         "-o".into(),
+        "PubkeyAcceptedAlgorithms=ssh-ed25519-cert-v01@openssh.com".into(),
+        "-o".into(),
         "ConnectTimeout=5".into(),
         "-i".into(),
         p(name),
