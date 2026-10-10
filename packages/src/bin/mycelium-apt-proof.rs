@@ -200,7 +200,7 @@ fn main() -> Result<()> {
         "missing prerequisite genuine package proof",
     )?;
     std::env::set_var("MYCELIUM_HOME", "/var/lib/mycelium");
-    let candidate = "0.1.0+signedqa2";
+    let candidate = "0.1.0+qualification5";
     let failed = "0.1.0+signedqa3";
     if Path::new(STATE).is_file() {
         require(
