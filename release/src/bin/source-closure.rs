@@ -301,7 +301,13 @@ fn resolve_initrd(requirements: &Path, lists: &Path, output: &Path) -> Result<()
         if fields.len() != 3 { return Err("requirements must have three fields".into()); }
         if fields[0] == "mycelium" { continue; } // Separate owner source closure.
         if fields[2] != "installer-initrd" { resolved.insert(line.to_owned()); continue; }
-        let version = bin_nmu_source_version(fields[1]);
+        // Audited Debian d-i20250803+deb13u1 build/Makefile609-611 emits
+        // targetstring-BUILD_DATE; debian/rules derives DATE from changelog
+        // VERSION and passes it as BUILD_DATE. This one observed ISO target
+        // is admitted ONLY if that exact suffix also exists in signed Sources.
+        let version = if fields[0] == "debian-installer" {
+            audited_installer_version(fields[1]).ok_or("unrecognized/unaudited installer build marker")?
+        } else { bin_nmu_source_version(fields[1]) };
         let names: BTreeSet<_> = mappings.iter().filter(|(binary, revision, _)| binary == fields[0] && revision == version).map(|(_, _, name)| name).collect();
         if names.len() != 1 { return Err(format!("unresolved/ambiguous initrd source {} {}", fields[0], fields[1]).into()); }
         resolved.insert(format!("{}\t{version}\tinstaller-initrd", names.first().unwrap()));
@@ -326,8 +332,18 @@ fn folded_field(stanza: &str, name: &str) -> Option<String> {
     }
     Some(value)
 }
+fn audited_installer_version(marker: &str) -> Option<&str> {
+    // Deliberately not a heuristic for future daily/custom installer builds.
+    (marker == "cdrom-isolinux-20250803+deb13u1").then_some("20250803+deb13u1")
+}
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn admits_only_audited_installer_marker() {
+        assert_eq!(super::audited_installer_version("cdrom-isolinux-20250803+deb13u1"), Some("20250803+deb13u1"));
+        assert_eq!(super::audited_installer_version("netboot-20250803+deb13u1"), None);
+        assert_eq!(super::audited_installer_version("cdrom-isolinux-20261010"), None);
+    }
     #[test]
     fn retains_folded_binary_names_in_signed_source_indexes() {
         assert_eq!(super::folded_field("Package: linux\nBinary: headers,\n ata-modules, kernel\nVersion: 1\n", "Binary"), Some("headers, ata-modules, kernel".into()));

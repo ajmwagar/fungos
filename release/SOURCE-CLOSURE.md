@@ -19,8 +19,9 @@ signature and hash checks remain mandatory. Production update policy is unchange
 
 The compact initrd status sometimes omits Source. `resolve-initrd` resolves
 binary names against authenticated source-index Binary fields; an unresolved or
-ambiguous mapping fails. Kernel-generated udebs still need matching authenticated
-binary Packages metadata, not a guessed source name. Signed-kernel build recipes
+ambiguous mapping fails. Folded Binary fields must be read in full, including
+kernel-generated udebs; otherwise matching authenticated binary Packages metadata
+is needed, not a guessed source name. Signed-kernel build recipes
 alone are not a substitute for the corresponding kernel implementation sources.
 
 Owner software needs its exact committed source, patches and build scripts plus
@@ -29,6 +30,19 @@ collects registry sources, but does not by itself collect Rust standard-library,
 musl, compiler-runtime or every bundled native dependency's corresponding source.
 These inputs and redistribution notices must be checked against the actual
 final executable. A GitHub repository archive alone is insufficient.
+
+The observed installer pseudo-package `cdrom-isolinux-20250803+deb13u1` is
+explicitly audited, not treated as a Debian source version. Authenticated Debian
+source `debian-installer=20250803+deb13u1` contains `build/Makefile`609–611,
+which emits targetstring-BUILD_DATE, and `debian/rules`4–5,51, which derives
+DATE from its changelog version and supplies BUILD_DATE. The resolver accepts
+only this exact audited marker and still requires its exact signed source-index
+entry. Future daily/custom markers fail until separately audited.
+
+Retained source archive SHA-256:
+`1ebd606d81ec64fda00f8f7c9585df6bf3b2f99135160dc67546ab63e7caf5d0`;
+DSC SHA-256:
+`c37e94ec74ce8962c1ff7d3c0e0c406a197399bfa5157827dd2df798a992c765`.
 
 Current preparation is explicitly incomplete: source resolution, complete
 bootloader/firmware coverage and the owner toolchain/native-source closure remain
