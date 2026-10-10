@@ -2,6 +2,8 @@
 
 Final-image gates and digest-bound preparatory evidence are in
 [QUALIFICATION.md](QUALIFICATION.md).
+Actual Mycelium-only install, runtime claim and reboot evidence is in
+[MYCELIUM-QUALIFICATION.md](MYCELIUM-QUALIFICATION.md).
 
 An explicit Mycelium-only qualification payload is supported by the shared
 [component gate](../packages/COMPONENTS.md). Supply its verified bundle plus
