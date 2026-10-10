@@ -1,5 +1,13 @@
 # fungOS headless installer (amd64, first slice)
 
+Public system overlays use the shared `base/scripts/apply-overlay.sh` ownership
+boundary: repository directories become root-owned 0755, file executable bits
+are retained and group/world writes removed. Builder UID/GID and checkout umask
+must not become OS policy. Only explicitly staged public overlay nodes are
+normalized; existing unrelated private target files are untouched. Runtime
+claims, keys and credentials never pass through this public overlay copier.
+Run `sudo sh base/scripts/check-overlay.sh` on Linux for its ownership regression.
+
 Final-image gates and digest-bound preparatory evidence are in
 [QUALIFICATION.md](QUALIFICATION.md).
 Actual Mycelium-only install, runtime claim and reboot evidence is in

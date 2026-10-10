@@ -24,6 +24,7 @@ source_commit=${SOURCE_COMMIT:-$(git -C "$installer_dir" rev-parse HEAD)}
 [ "${#source_commit}" = 40 ] || { echo 'SOURCE_COMMIT must be a full source revision' >&2; exit 1; }
 case "$source_commit" in *[!0-9a-f]*) echo 'SOURCE_COMMIT must be lowercase hexadecimal' >&2; exit 1 ;; esac
 cp "$base_dir/config/release.env" "$installer_dir/apply.sh" "$work/fungos/"
+cp "$base_dir/scripts/apply-overlay.sh" "$work/fungos/"
 runtime_components=absent
 if [ "$#" -ge 3 ]; then
   component_tool=${FUNGOS_COMPONENT_TOOL:-"$installer_dir/../packages/target/release/component-bundle"}

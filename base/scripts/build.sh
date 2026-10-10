@@ -59,7 +59,7 @@ find "$rootfs/var/lib/apt/lists" -maxdepth 1 -type f -name '*InRelease' -exec cp
 [ "$(find "$release_inputs" -type f -name '*InRelease' | wc -l)" -eq 3 ] || { echo 'expected three authenticated archive releases' >&2; exit 1; }
 (cd "$release_inputs" && sha256sum *InRelease) > "$release_inputs/SHA256SUMS"
 
-cp -a "$base_dir/rootfs/." "$rootfs/"
+sh "$base_dir/scripts/apply-overlay.sh" "$base_dir/rootfs" "$rootfs"
 chmod 0755 "$rootfs/usr/libexec/fungos-first-contact" "$rootfs/usr/libexec/fungos-verify-update"
 mkdir -p \
   "$rootfs/etc/systemd/system/multi-user.target.wants" \

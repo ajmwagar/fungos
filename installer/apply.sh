@@ -26,7 +26,7 @@ if [ -d "$payload/components" ]; then
     *) echo 'unknown component purpose; refusing service activation' >&2; exit 1 ;;
   esac
 fi
-cp -a "$payload/rootfs/." /
+sh "$payload/apply-overlay.sh" "$payload/rootfs" /
 chmod 0755 /usr/libexec/fungos-first-contact /usr/libexec/fungos-verify-update
 mkdir -p /usr/lib/fungos/first-contact.d /usr/lib/fungos/update-verifiers.d /usr/share/fungos/installer
 systemctl enable systemd-networkd systemd-resolved ssh fungos-first-contact
