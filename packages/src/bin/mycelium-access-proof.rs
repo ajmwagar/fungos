@@ -132,7 +132,7 @@ fn denied(out: Output) -> Result<()> {
         "not a certificate authentication denial",
     )
 }
-fn main() -> Result<()> {
+fn proof() -> Result<()> {
     require(run("id", &["-u"])?.trim() == "0", "root required")?;
     require(
         fs::read_to_string("/sys/class/dmi/id/product_name")?.trim()
@@ -294,6 +294,23 @@ fn main() -> Result<()> {
     private(&p("passed"), b"certificate-only allow; wrong-role and same-CA ungranted deny; revoke reconcile deny; no sudo\n")?;
     run("systemctl", &["poweroff"])?;
     Ok(())
+}
+fn main() -> Result<()> {
+    let result = proof();
+    if let Err(error) = &result {
+        // Failed QA boots must also flush their native journal before inspection.
+        if fs::read_to_string("/sys/class/dmi/id/product_name")
+            .is_ok_and(|v| v.trim() == "fungos-mycelium-access-validation")
+        {
+            eprintln!("ACCESS_PROOF_FAILED: {error}");
+            let _ = private(
+                "/var/lib/fungos-access-proof-error",
+                error.to_string().as_bytes(),
+            );
+            let _ = run("systemctl", &["poweroff"]);
+        }
+    }
+    result
 }
 #[cfg(test)]
 mod tests {
