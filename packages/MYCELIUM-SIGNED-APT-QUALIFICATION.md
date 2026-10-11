@@ -4,6 +4,34 @@ Verified 2026-10-10 in a disposable amd64 fungOS guest. This is evidence for
 the existing `mycelium software apt plan/apply/recover` engine, not a fleet
 rollout or publication of a production APT repository.
 
+## Final candidate requalification
+
+The complete engine proof was repeated on the freshly installed, root-owned
+UEFI disk from corrected ISO SHA-256
+`601a631bb41cd93ef091e9b6a38b25d09bb49395a036f0bf668053dc9bde0b5c`,
+after genuine isolated first-contact enrollment and reboot. The earlier retained
+fixture had incorrect OS ancestor ownership; it is not whole-image evidence.
+
+The final candidate was owner source
+`10a3c18ebea8b9f3f7be981657957ac10a5a2f16`, package
+`0.1.0+qualification5`, archive SHA-256
+`db6c2e929b127fa89146175ff063fb0bf43c1785ef9a08a398aee4230b218daa`.
+Signed repository generation was
+`88abf08921df1043490c148f041602bcebb84673db58a4a7470398965cd0187c`.
+The real engine first downgraded the installed final candidate to the genuine
+baseline above (`FUNGOS_MYCELIUM_SIGNED_APT_BASELINE_DOWNGRADE_VERIFIED`), then
+passed all eight markers below with the final candidate substituted for signedqa2.
+Health fault injection still used signedqa3, retaining the real previous qa5
+archive for rollback and recovery. All identity digests remained unchanged.
+
+After actual reboot, the installed executable SHA-256 was
+`60664012ba7b7b3a7c3ece05975de582caa9b6cc207a4f1b3ce535f17d3c2fa8`.
+The bounded, no-NIC QEMU exited successfully; its read-only journal inspection
+confirmed every marker. Owned loop devices were detached afterward. Helpers
+include `86daaf2`, `c71c0ae` (reject wrong-owned OS fixtures), and `d215ddb`
+(signed-engine baseline priming); no package or runtime implementation was
+replaced by the harness. This qualifies exact final bytes, not a fleet rollout.
+
 ## Exact inputs
 
 The prerequisite was the private, already-qualified Mycelium package disk from
