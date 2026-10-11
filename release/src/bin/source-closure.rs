@@ -63,6 +63,31 @@ fn control(data: &str) -> Result<Vec<(String, String)>> {
     }
     Ok(result)
 }
+fn built_using(data: &str) -> Result<BTreeSet<(String, String)>> {
+    let mut required = BTreeSet::new();
+    for stanza in data.split("\n\n") {
+        if stanza.lines().any(|line|line.starts_with("Status: ") && line != "Status: install ok installed") {continue;}
+        let mut field = String::new();
+        let mut active = false;
+        for line in stanza.lines().chain(std::iter::once("")) {
+            if active && line.starts_with([' ', '\t']) { field.push(' '); field.push_str(line.trim()); continue; }
+            if active {
+                for dependency in field.split(',').map(str::trim) {
+                    let (name, revision) = dependency.split_once(" (= ").ok_or("nonexact Built-Using source")?;
+                    let revision = revision.strip_suffix(')').ok_or("malformed Built-Using source")?;
+                    if !identity(name) || !identity(revision) { return Err("unsafe Built-Using source".into()); }
+                    required.insert((name.to_owned(), revision.to_owned()));
+                }
+                field.clear();
+            }
+            let value = line.strip_prefix("Built-Using: ").or_else(||line.strip_prefix("Static-Built-Using: "));
+            active = value.is_some_and(|v|!v.is_empty());
+            if let Some(value)=value {field.push_str(value);}
+        }
+    }
+    Ok(required)
+}
+fn status_origin(status:Option<&str>)->Option<&'static str>{match status {Some("install ok installed")=>Some("installed-status"),Some(value) if value.ends_with(" ok config-files")=>Some("retained-config-source-conservative"),_=>None}}
 fn media(directory: &Path, output: &mut BTreeSet<(String, String, String)>) -> Result<()> {
     for entry in fs::read_dir(directory)? {
         let entry = entry?;
@@ -83,6 +108,8 @@ fn media(directory: &Path, output: &mut BTreeSet<(String, String, String)>) -> R
                     "Package".into(),
                     "Version".into(),
                     "Source".into(),
+                    "Built-Using".into(),
+                    "Static-Built-Using".into(),
                 ],
                 None,
             )?;
@@ -93,6 +120,7 @@ fn media(directory: &Path, output: &mut BTreeSet<(String, String, String)>) -> R
             for (name, revision) in records {
                 output.insert((name, revision, "iso-package".into()));
             }
+            for (name,revision) in built_using(&data)? {output.insert((name,revision,"iso-built-using".into()));}
         }
     }
     Ok(())
@@ -134,6 +162,7 @@ fn inventory(
     for (name, revision) in control(&fs::read_to_string(initrd_status)?)? {
         required.insert((name, revision, "installer-initrd".into()));
     }
+    for (name,revision) in built_using(&fs::read_to_string(initrd_status)?)? {required.insert((name,revision,"installer-built-using".into()));}
     if required.is_empty() {
         return Err("empty Debian source requirements".into());
     }
@@ -151,6 +180,7 @@ fn fetch(
     keyring: &Path,
     snapshot: &str,
     installer_snapshot: &str,
+    unstable: bool,
 ) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
     if !fs::symlink_metadata(keyring)?.is_file() {
@@ -178,12 +208,13 @@ fn fetch(
     let mut sources = String::new();
     // Current installed snapshot plus the upstream13.1 netinst release window.
     // Exact source versions are selected from authenticated indexes, never latest.
-    for snapshot in [snapshot, installer_snapshot] {
-        for (archive, suite) in [
+    for snapshot in BTreeSet::from([snapshot, installer_snapshot]) {
+        let archives: &[(&str,&str)] = if unstable {&[("debian","sid")]} else {&[
             ("debian", "trixie"),
             ("debian", "trixie-updates"),
             ("debian-security", "trixie-security"),
-        ] {
+        ]};
+        for (archive, suite) in archives {
             sources.push_str(&format!("deb-src [signed-by={}] https://snapshot.debian.org/archive/{archive}/{snapshot}/ {suite} main contrib non-free-firmware\n", key.display()));
         }
     }
@@ -272,7 +303,25 @@ fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("inventory") if args.len() == 5 => inventory(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), Path::new(&args[4])),
-        Some("fetch") if args.len() == 6 => fetch(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), &args[4], &args[5]),
+        Some("built-using") if args.len() == 3 => {
+            if Path::new(&args[2]).exists(){return Err("refusing existing source requirements".into())}
+            let mut result=String::new();
+            for (name,revision) in built_using(&fs::read_to_string(&args[1])?)? {result.push_str(&format!("{name}\t{revision}\tinstalled-built-using\n"));}
+            fs::write(&args[2],result)?;Ok(())
+        },
+        Some("status-sources") if args.len() == 3 => {
+            if Path::new(&args[2]).exists(){return Err("refusing existing source requirements".into())}
+            let data=fs::read_to_string(&args[1])?;let mut required=BTreeSet::new();
+            for stanza in data.split("\n\n") {
+                let status=stanza.lines().find_map(|line|line.strip_prefix("Status: "));
+                let Some(origin)=status_origin(status) else {continue};
+                for (name,revision) in control(stanza)? {if name!="mycelium"{required.insert((name,revision,origin));}}
+            }
+            let mut result=String::new();for (name,revision,origin) in required{result.push_str(&format!("{name}\t{revision}\t{origin}\n"));}
+            fs::write(&args[2],result)?;Ok(())
+        },
+        Some("fetch") if args.len() == 6 => fetch(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), &args[4], &args[5], false),
+        Some("fetch-sid") if args.len() == 5 => fetch(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3]), &args[4], &args[4], true),
         Some("resolve-initrd") if args.len() == 4 => resolve_initrd(Path::new(&args[1]), Path::new(&args[2]), Path::new(&args[3])),
         _ => Err("usage: source-closure inventory INSTALLED.tsv EXTRACTED_ISO INITRD_DPKG_STATUS NEW_REQUIREMENTS.tsv | fetch REQUIREMENTS.tsv NEW_PRIVATE_CACHE DEBIAN_ARCHIVE_KEYRING INSTALLED_SNAPSHOT INSTALLER_SNAPSHOT".into())
     }
@@ -339,6 +388,18 @@ fn audited_installer_version(marker: &str) -> Option<&str> {
 }
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn status_classification_does_not_call_residual_configs_installed() {
+        assert_eq!(super::status_origin(Some("install ok installed")),Some("installed-status"));
+        assert_eq!(super::status_origin(Some("deinstall ok config-files")),Some("retained-config-source-conservative"));
+        assert_eq!(super::status_origin(Some("purge ok not-installed")),None);
+    }
+    #[test]
+    fn includes_exact_folded_built_using() {
+        assert_eq!(super::built_using("Built-Using: linux (= 6.12.38-1),\n font (= 2:1)\nStatic-Built-Using: libc (= 3)\n").unwrap(), std::collections::BTreeSet::from([("linux".into(),"6.12.38-1".into()),("font".into(),"2:1".into()),("libc".into(),"3".into())]));
+        assert!(super::built_using("Built-Using: foo (>= 1)\n").is_err());
+        assert!(super::built_using("Status: deinstall ok config-files\nBuilt-Using: linux (= 1)\n").unwrap().is_empty());
+    }
     #[test]
     fn admits_only_audited_installer_marker() {
         assert_eq!(super::audited_installer_version("cdrom-isolinux-20250803+deb13u1"), Some("20250803+deb13u1"));
