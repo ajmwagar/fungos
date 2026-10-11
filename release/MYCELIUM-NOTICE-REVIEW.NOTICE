@@ -1,0 +1,72 @@
+Mycelium qa5 third-party notice review
+====================================
+
+Executable source: 10a3c18ebea8b9f3f7be981657957ac10a5a2f16
+Executable SHA256: 60664012ba7b7b3a7c3ece05975de582caa9b6cc207a4f1b3ce535f17d3c2fa8
+Cargo.lock SHA256: 1577e65d674b4ddfd132efec0bf11df0bc87ed1ec30c74bf843b01b342a42544
+Notice packager source: f0980fba00412ed0772effc9a80d2d2446f3108b
+
+Scope and selection
+-------------------
+These notices are a deliberately conservative source-closure superset, not a
+claim that all listed components are linked into this executable. No exclusion
+is made solely because a component is target-specific, build-only, a procedural
+macro, or inactive. The package's MIT OR Apache-2.0 license applies to first-party
+Mycelium code, not to the independently licensed code named in these notices.
+Additional notices do not change the executable's license or imply that compiler
+licenses apply to the application.
+
+The retained inventory covers all 500 exact registry source versions and their
+available filename-selected and file-local attribution evidence. Missing archive
+notices were supplemented from the exact published source revisions. Complete
+original sources remain part of the corresponding-source inputs; compacted
+notices do not replace them. Ambiguous comment boundaries and files with later
+attribution markers retain their complete original source file.
+
+The actual build used Rust 1.98.1 and cargo-zigbuild 0.23.4/Zig 0.14.1, targeting
+x86_64-unknown-linux-musl with mycelium-cli's iroh-sync feature. Native code
+includes AWS-LC 5.7.0 (aws-lc-sys 0.45.0), ring 0.17.14's BoringSSL code and
+Lua 5.4.8 (lua-src 550.0.0). Their bundled notices remain verbatim. LuaJIT and
+other source-only Lua versions are not asserted to be selected runtimes.
+
+Rust library COPYRIGHT-library.html and underlying runtime notices are retained.
+COPYRIGHT.html covers the whole compiler and is additional source/build evidence,
+not a statement that every compiler component is part of the application. Zig's
+musl, compiler_rt, libunwind and other materialized library notices are retained
+conservatively. Rust's exact LLVM libunwind submodule is retained separately.
+Ubuntu Zig and LLVM header source packages have authenticated exact source
+closures; headers are not relabelled as Zig-authored code.
+
+Declaration-only upstream exceptions
+------------------------------------
+enum-assoc 1.4.1, source revision
+351b306939b150601451df752a183b077b0de85a, explicitly declares MIT OR Apache-2.0
+in its Cargo manifest. It is a procedural macro. Its exact declaration and author
+metadata are retained; standard MIT and Apache-2.0 texts are labelled supplements.
+No upstream LICENSE file or copyright statement is invented.
+
+pharos 0.5.3, source revision
+f5b985a59cfeced5ae66325d477b6c982c9408bf, explicitly declares Unlicense in its
+manifest and exact README. The declarations and labelled standard Unlicense text
+are retained. No upstream license file is falsely attributed to the author.
+
+For both exceptions, exact revisions and full fetched histories were examined.
+Absence of a separate license filename is not substituted for an absent license
+declaration: these two have explicit declarations. This review accepts the
+documented declaration evidence for this bounded engineering coverage inventory;
+it is not legal certification or a replacement for upstream ownership evidence.
+
+Admission and distribution boundary
+----------------------------------
+The reviewed input must retain both declarations, their clearly labelled texts,
+all collected nonempty notices, the dependency license inventory and this review.
+The packager verifies the binary, lock, inventory and every retained notice hash
+before producing output, then verifies its staged copies. Reviewed-complete
+means this explicit conservative notice scope has been reviewed; it does not
+mean legal clearance is asserted or that textual scanning proves all obligations.
+
+Notice-only repackaging must leave the qualified executable bytes unchanged and
+record its source separately from the newer packager's source. A new package and
+ISO require their own hashes and artifact checks. The Debian/media source section
+is independently documented in MEDIA-LICENSE-COVERAGE.md. Release signatures,
+public source availability and publication are separate gates.
