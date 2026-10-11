@@ -334,13 +334,15 @@ fn folded_field(stanza: &str, name: &str) -> Option<String> {
 }
 fn audited_installer_version(marker: &str) -> Option<&str> {
     // Deliberately not a heuristic for future daily/custom installer builds.
-    (marker == "cdrom-isolinux-20250803+deb13u1").then_some("20250803+deb13u1")
+    matches!(marker, "cdrom-isolinux-20250803+deb13u1" | "cdrom-gtk-20250803+deb13u1")
+        .then_some("20250803+deb13u1")
 }
 #[cfg(test)]
 mod tests {
     #[test]
     fn admits_only_audited_installer_marker() {
         assert_eq!(super::audited_installer_version("cdrom-isolinux-20250803+deb13u1"), Some("20250803+deb13u1"));
+        assert_eq!(super::audited_installer_version("cdrom-gtk-20250803+deb13u1"), Some("20250803+deb13u1"));
         assert_eq!(super::audited_installer_version("netboot-20250803+deb13u1"), None);
         assert_eq!(super::audited_installer_version("cdrom-isolinux-20261010"), None);
     }
