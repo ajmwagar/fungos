@@ -119,6 +119,61 @@ fn attribution_header(path: &Path) -> Result<bool> {
     .iter()
     .any(|marker| text.contains(marker)))
 }
+fn retained_attribution(bytes: &[u8]) -> Vec<u8> {
+    let Ok(text) = std::str::from_utf8(bytes) else {
+        return bytes.to_vec();
+    };
+    let lower = text.to_ascii_lowercase();
+    let later_marker = |end: usize| {
+        [
+            "copyright",
+            "spdx-license-identifier",
+            "permission is hereby granted",
+            "redistribution and use",
+        ]
+        .iter()
+        .any(|marker| lower[end..].contains(marker))
+    };
+    let marker = [
+        "copyright",
+        "spdx-license-identifier",
+        "permission is hereby granted",
+        "redistribution and use",
+    ]
+    .iter()
+    .filter_map(|m| lower.find(m))
+    .min();
+    let Some(marker) = marker else {
+        return bytes.to_vec();
+    };
+    // Only extract a complete leading C/Rust block. Ambiguous file-local or
+    // later statements retain the original file instead of guessing boundaries.
+    let trimmed = text.trim_start();
+    let start = text.len() - trimmed.len();
+    if trimmed.starts_with("/*") {
+        if let Some(end) = text[start + 2..].find("*/").map(|end| start + 2 + end + 2) {
+            if marker < end && !later_marker(end) {
+                return bytes[start..end].to_vec();
+            }
+        }
+    }
+    if let Some(prefix) = ["//", "#", ";", "--"]
+        .iter()
+        .find(|prefix| trimmed.starts_with(**prefix))
+    {
+        let mut end = start;
+        for line in text[start..].split_inclusive('\n') {
+            if !line.trim().is_empty() && !line.trim_start().starts_with(prefix) {
+                break;
+            }
+            end += line.len();
+        }
+        if marker < end && !later_marker(end) {
+            return bytes[start..end].to_vec();
+        }
+    }
+    bytes.to_vec()
+}
 fn files(root: &Path, here: &Path, output: &mut Vec<PathBuf>) -> Result<()> {
     for entry in fs::read_dir(here)? {
         let entry = entry?;
@@ -165,11 +220,14 @@ fn collect(
                 ));
             let destination = output.join("notices").join(label).join(&retained);
             fs::create_dir_all(destination.parent().ok_or("parent")?)?;
-            fs::copy(root.join(&relative), destination)?;
+            fs::write(
+                &destination,
+                retained_attribution(&fs::read(root.join(&relative))?),
+            )?;
             inventory.push_str(&format!(
                 "{label}\t{}\t{}\n",
                 retained.display(),
-                digest(&root.join(&relative))?
+                digest(&destination)?
             ));
             count += 1;
         }
@@ -186,6 +244,35 @@ fn collect(
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
+    if args.len() == 3 && args[0] == "compact" {
+        let root = Path::new(&args[1]);
+        let output = Path::new(&args[2]);
+        let mut listed = Vec::new();
+        files(root, root, &mut listed)?;
+        fs::create_dir(output)?;
+        let mut inventory = String::from("sha256\tpath\n");
+        for relative in listed {
+            let source = root.join(&relative);
+            let destination = output.join(&relative);
+            fs::create_dir_all(destination.parent().ok_or("parent")?)?;
+            if relative
+                .components()
+                .any(|p| p.as_os_str() == "source-attributions")
+            {
+                fs::write(&destination, retained_attribution(&fs::read(&source)?))?;
+            } else {
+                fs::copy(&source, &destination)?;
+            }
+            inventory.push_str(&format!(
+                "{}\t{}\n",
+                digest(&destination)?,
+                relative.display()
+            ));
+        }
+        fs::write(output.join("compact-inventory.tsv"), inventory)?;
+        println!("compact attribution evidence retained; not legal clearance");
+        return Ok(());
+    }
     if !(6..=8).contains(&args.len()) {
         return Err(
             "usage: owner-license-audit OWNER_SOURCE VENDOR RUST_SRC RUST_DOC ZIG_LIB NEW_OUTPUT [RUST_LLVM_LIBUNWIND [SUPPLEMENTAL_NOTICES]]"
@@ -340,6 +427,24 @@ mod tests {
     fn notice_selection_preserves_filename_notices() {
         assert!(notice(Path::new("LICENSE-MIT")));
         assert!(!notice(Path::new("source.rs")));
+    }
+    #[test]
+    fn attribution_retains_complete_block_or_full_ambiguous_source() {
+        let source = b" /* Copyright A\n permission is hereby granted\n */\nint x;";
+        assert_eq!(
+            retained_attribution(source),
+            b"/* Copyright A\n permission is hereby granted\n */"
+        );
+        let later = b"int x; /* Copyright A */";
+        assert_eq!(retained_attribution(later), later);
+        let multiple = b"/* Copyright A */\nint x; /* Copyright B */";
+        assert_eq!(retained_attribution(multiple), multiple);
+        let unfinished = b"/* Copyright A";
+        assert_eq!(retained_attribution(unfinished), unfinished);
+        assert_eq!(
+            retained_attribution(b"// Copyright A\n// MIT terms\n\nfn main() {}"),
+            b"// Copyright A\n// MIT terms\n\n"
+        );
     }
     #[test]
     fn lock_ignores_workspace_and_rejects_bad_checksum() {

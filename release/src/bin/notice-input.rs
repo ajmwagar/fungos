@@ -86,18 +86,28 @@ fn main() -> Result<()> {
         }
     }
     let output = Path::new(&args[0]);
-    fs::create_dir(output)?;
-    let mut inventory = String::from("sha256\tpath\n");
+    let mut planned = BTreeMap::new();
     for (i, input) in args[4..].iter().enumerate() {
         let mut files = BTreeMap::new();
         visit(Path::new(input), Path::new(input), &mut files)?;
         for (relative, source) in files {
             let destination = PathBuf::from(format!("notices/input-{i}")).join(relative);
-            let path = output.join(&destination);
-            fs::create_dir_all(path.parent().ok_or("parent")?)?;
-            fs::copy(&source, &path)?;
-            inventory.push_str(&format!("{}\t{}\n", hash(&path)?, destination.display()));
+            planned.insert(destination, (hash(&source)?, source));
         }
+    }
+    // Collection errors cannot create a plausible output. Later I/O failure may
+    // leave evidence files, but metadata is written last and always incomplete.
+    fs::create_dir(output)?;
+    let mut inventory = String::from("sha256\tpath\n");
+    for (destination, (expected, source)) in planned {
+        let path = output.join(&destination);
+        fs::create_dir_all(path.parent().ok_or("parent")?)?;
+        fs::copy(&source, &path)?;
+        let actual = hash(&path)?;
+        if actual != expected {
+            return Err("notice changed during collection".into());
+        }
+        inventory.push_str(&format!("{actual}\t{}\n", destination.display()));
     }
     fs::write(output.join("inventory.tsv"), inventory)?;
     fs::write(output.join("metadata.txt"),format!("schema_version=1\nsource_commit={}\nexecutable_sha256={}\ncargo_lock_sha256={}\ninventory_sha256={}\ncoverage=incomplete\nlegal_clearance=not-asserted\n",args[1],args[2],args[3],hash(&output.join("inventory.tsv"))?))?;

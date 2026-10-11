@@ -77,7 +77,12 @@ Still unresolved:
 - File-local header attribution review is not proven by filename discovery.
   Complete original sources and published upstream test fixtures remain retained;
   these must not be stripped because some fixtures resemble keys.
-- Matching Ubuntu LLVM20 source-package closure needs retention/verification.
+- Matching Ubuntu Zig/LLVM20 source-package closure is now retained and verified:
+  two exact DSCs and seven referenced archive files, 188 MiB. Manifest SHA256
+  `0f68fe511799f0d862e750ffdd4c01533de0c50da861941a96a8deeae59abf41`,
+  in `ubuntu-owner-source-cache/source-manifest.tsv`; authenticated isolated
+  Ubuntu source indexes and archive keyring are retained. This does not imply
+  every compile header's code is linked into the executable.
 - Raw notice payload must accompany independently downloadable `.deb` and ISO.
   A private cache or separately linked source archive does not prove this.
 
@@ -95,6 +100,14 @@ markers. It does not guess/truncate an ambiguous comment boundary. This is a
 conservative attribution evidence set, not a claim that every textual marker is
 a binary license obligation; the compiler-wide and inactive dependencies must
 remain distinguishable during runtime notice-payload review.
+
+v4 completed 500 registry checks, 30,033 source/attribution records and 11,941
+notice files (209 MiB). Full v4 source-file notices remain the conservative
+evidence set. Compact collection extracts only complete leading block/line
+comments, retaining the full file if another attribution marker follows or the
+boundary is ambiguous. Such a scanner still does not prove legal completeness.
+Runtime-only selection and the documented declaration-only exceptions remain
+explicit engineering review findings; no package has been marked reviewed-complete.
 
 ## Generic notice input and runbook
 
@@ -124,7 +137,7 @@ conservative toolchain-wide notices), inventory SHA256
 Its `coverage=incomplete` must be rejected. Runtime-only selection should be
 reviewed to avoid implying every compiler license applies to the executable.
 
-Cheap validation used the existing Agora release workspace: cargo check, five
+Cheap validation used the existing Agora release workspace: cargo check, seven
 focused unit tests across the three tools, then release builds and real inventory
 execution. These tools are deterministic collection helpers, not SPDX or legal
 certification engines. The Debian media/source closure is documented separately.
