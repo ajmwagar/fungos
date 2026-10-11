@@ -1,8 +1,18 @@
 # Mycelium-only installer qualification
 
+## Notice-bearing qa6 follow-up
+
+The latest notice-bearing candidate passed fresh BIOS and UEFI installs, native
+disk-only boots, installed notice/executable hash checks, ownership and exact
+source-version coverage. The complete source archive also passed full extraction
+and file-hash verification. See
+[the qa6 qualification report](../release/NOTICE-PACKAGE-QUALIFICATION.md) for
+exact artifact/evidence digests and boundaries. Nothing is published or signed
+by these tests; the previous qa5 results below remain historical evidence.
+
 ## Corrected candidate: ownership and enrollment gates passed
 
-The current tested candidate is clean fungOS source
+The qa5 tested candidate is clean fungOS source
 `b63a4e1fbbfb76921823f6f89eabff8ce77b19cb`, ISO SHA-256
 `601a631bb41cd93ef091e9b6a38b25d09bb49395a036f0bf668053dc9bde0b5c`.
 It embeds genuine `mycelium_0.1.0+qualification5_amd64.deb`, SHA-256

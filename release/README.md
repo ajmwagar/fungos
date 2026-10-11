@@ -6,6 +6,11 @@ not publish files, start a seed service, sign metadata, or enable automatic
 image installation. Mycelium remains the owner of identity and signed software
 updates; BitTorrent is another way to obtain matching bytes, never authority.
 
+The [notice-bearing Mycelium-only qa6 report](NOTICE-PACKAGE-QUALIFICATION.md)
+records the actual package/ISO, fresh BIOS/UEFI tests and verified complete source
+archive. Engineering coverage is reviewed; signatures and public delivery remain
+separate. It is not a full edge release or legal/compliance certification.
+
 ## Release identity and package selection
 
 Use immutable names containing the release, profile, architecture and package

@@ -67,9 +67,11 @@ files and the reproduced SVG splash are documented in
 [MEDIA-LICENSE-COVERAGE.md](MEDIA-LICENSE-COVERAGE.md). That report also records
 retained notices for all 791 media archive occurrences and 36 firmware packages.
 
-The remaining complete-release gate is assembling the separately audited
-owner source/native-runtime/notices section with this verified Debian section
-and recording final source-bundle hashes and authorized release signatures.
+The subsequent qa6 combined source archive includes the separately audited
+owner source/native-runtime/notices section and this verified Debian section.
+Its final hashes, full extracted-file verification and fresh installed-version
+checks are recorded in [NOTICE-PACKAGE-QUALIFICATION.md](NOTICE-PACKAGE-QUALIFICATION.md).
+Authorized release signatures and public delivery remain separate gates.
 The Debian source archive staging contains 1758 verified files; it is not
 misrepresented as the complete combined source bundle. Actual archives are
 retained privately on the approved build host;

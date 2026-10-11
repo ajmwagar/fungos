@@ -101,10 +101,11 @@ not silently pulled in from upstream linux-firmware. Only exact Debian archive
 contents are included. Do not expand this evidence to an arbitrary firmware
 download or a changed product/use without checking its terms.
 
-## Remaining complete-bundle gate
+## Combined source follow-up
 
-Mycelium's exact owner source, dependency/native runtime source, notices and
-build scripts must accompany this Debian section. Those are audited separately
-against the actual qa5 executable. Final bundle hashes, notice inventory and
-release signatures are required before publication; this document does not
-authorize a public torrent or claim that a partial source archive is complete.
+The combined qa6 archive now includes Mycelium's exact owner source, dependency/
+native runtime sources, reviewed notices and build scripts alongside this Debian
+section. [NOTICE-PACKAGE-QUALIFICATION.md](NOTICE-PACKAGE-QUALIFICATION.md) records
+its hashes, extraction verification and source coverage of fresh BIOS/UEFI installs.
+Release signatures and public source availability remain required before
+publication; this report does not authorize a public torrent.
