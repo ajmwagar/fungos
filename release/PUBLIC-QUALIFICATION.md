@@ -41,6 +41,30 @@ key home was removed. Off-device backup remains an operator requirement.
   not asserted. The production CLI session returned 401; no authenticated
   build/deployment ID was obtained and no private operator bypass was used.
 
+An initially empty Transmission 4.1.1 client downloaded both published torrents
+entirely through their HTTPS webseeds. It was deliberately paused and shut down
+mid-transfer, then restarted using its retained state. Both payloads reached
+100% verified and their SHA-256 hashes matched the inventory. DHT, PEX, LPD and
+port mapping were disabled; RPC was loopback-only and the peer listener used
+the private LAN interface. There were zero connected peers and zero uploaded
+bytes. The daemon exited cleanly after completion. This is an actual webseed
+transfer and resume test, not a public peer-swarm or new native boot test.
+
+Raw receipts are retained in `release/evidence/`:
+
+- `mycelium-qa6-public-webseed-transfer.txt`, SHA-256
+  `387126035b02f65b7c3266742e99917c420ce2965186e0ec7a1a2b730546f695`.
+- `mycelium-qa6-public-webseed-restart.txt`, SHA-256
+  `9661d66af687fdf2889fa90814b5fe85b0a2cf3af0393d25149890612e944aff`.
+- `mycelium-qa6-public-webseed-received.SHA256SUMS`, SHA-256
+  `96284aa44860db4026a5fa3070bd6b576cf08fe358247252c1c062dc3ba48b5d`.
+
+The first loopback-bound download trial could not reach public HTTP and was
+not acceptance evidence; the private-LAN-bound trial above completed. Its
+temporary 4.1 GB RAM payload copies were removed after receipt retention;
+durable Agora originals and public downloads remain. An unused server-side
+staging ISO copy was also removed, without removing advertised artifacts.
+
 R2 serves files and torrent webseeds, not a BitTorrent daemon. No persistent
 public peer seeder, automatic installer signature enforcement, APT channel
 publication, FPL-managed storage admission or fleet trust change is claimed.

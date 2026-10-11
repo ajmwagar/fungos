@@ -1,0 +1,90 @@
+NAME
+  Id: 1
+  Name: fungos-mycelium-qualification6-amd64.iso
+  Hash: 020aa0817773245d1ebd9247b4d47bbfda0ed1e9
+  Magnet: magnet:?xt=urn:btih:020aa0817773245d1ebd9247b4d47bbfda0ed1e9&dn=fungos-mycelium-qualification6-amd64.iso&ws=https%3A%2F%2Fdownloads.fungos.dev%2Fqualification%2Fqa6-a77efddc84766530%2Ffungos-mycelium-qualification6-amd64.iso%3Fv%3Dqa6
+  Labels: 
+
+TRANSFER
+  State: Idle
+  Location: /dev/shm/fungos-public-webseed-lan.s3MXMU/payloads
+  Sequential Download: No
+  Sequential Download from piece: 0
+  Percent Done: 97.1%
+  ETA: 7 seconds (7 seconds)
+  Download Speed: 3.47 MB/s
+  Upload Speed: 0 B/s
+  Have: 810.1 MB (808.5 MB verified)
+  Availability: 97.1%
+  Total size: 833.9 MB (833.9 MB wanted)
+  Downloaded: 810.1 MB
+  Uploaded: None
+  Ratio: 0.00
+  Peers: connected to 0, uploading to 0, downloading from 0
+  Web Seeds: downloading from 1 of 1 web seeds
+
+HISTORY
+  Date added:       Sat Oct 10 19:47:11 2026
+  Date started:     Sat Oct 10 19:47:11 2026
+  Latest activity:  Sat Oct 10 19:51:04 2026
+  Downloading Time: 3 minutes, 53 seconds (233 seconds)
+
+ORIGINS
+  Public torrent: Yes
+  Piece Count: 796
+  Piece Size: 1 MiB
+
+LIMITS & BANDWIDTH
+  Download Limit: Unlimited
+  Upload Limit: Unlimited
+  Ratio Limit: Default
+  Idle Limit: Default
+  Honors Session Limits: Yes
+  Peer limit: 50
+  Bandwidth Priority: Normal
+
+NAME
+  Id: 2
+  Name: fungos-mycelium-qa6-sources.tar.zst
+  Hash: c42a6334d7b1ad840e6f5fd258164dba03d5a6fb
+  Magnet: magnet:?xt=urn:btih:c42a6334d7b1ad840e6f5fd258164dba03d5a6fb&dn=fungos-mycelium-qa6-sources.tar.zst&ws=https%3A%2F%2Fdownloads.fungos.dev%2Fqualification%2Fqa6-a77efddc84766530%2Ffungos-mycelium-qa6-sources.tar.zst%3Fv%3Dqa6
+  Labels: 
+
+TRANSFER
+  State: Idle
+  Location: /dev/shm/fungos-public-webseed-lan.s3MXMU/payloads
+  Sequential Download: No
+  Sequential Download from piece: 0
+  Percent Done: 50.8%
+  ETA: 3 minutes, 43 seconds (223 seconds)
+  Download Speed: 7.13 MB/s
+  Upload Speed: 0 B/s
+  Have: 1.66 GB (1.66 GB verified)
+  Availability: 50.8%
+  Total size: 3.27 GB (3.27 GB wanted)
+  Downloaded: 1.66 GB
+  Uploaded: None
+  Ratio: 0.00
+  Peers: connected to 0, uploading to 0, downloading from 0
+  Web Seeds: downloading from 1 of 1 web seeds
+
+HISTORY
+  Date added:       Sat Oct 10 19:47:11 2026
+  Date started:     Sat Oct 10 19:47:11 2026
+  Latest activity:  Sat Oct 10 19:51:04 2026
+  Downloading Time: 3 minutes, 53 seconds (233 seconds)
+
+ORIGINS
+  Public torrent: Yes
+  Piece Count: 3120
+  Piece Size: 1 MiB
+
+LIMITS & BANDWIDTH
+  Download Limit: Unlimited
+  Upload Limit: Unlimited
+  Ratio Limit: Default
+  Idle Limit: Default
+  Honors Session Limits: Yes
+  Peer limit: 50
+  Bandwidth Priority: Normal
+
