@@ -1,9 +1,11 @@
 # Mycelium owner-source and notice audit
 
-This is an artifact-linked evidence inventory, **not legal clearance**. Publication
-of the existing standalone package/image remains blocked: third-party notices are
-not embedded, and the checks below do not establish complete file-local notice
-coverage. Do not turn `coverage=incomplete` into `reviewed-complete` automatically.
+This is an artifact-linked evidence inventory, **not legal clearance**. The initial
+qa5 findings below are historical. The subsequent conservative engineering review
+and actual notice-bearing qa6 package are documented in
+[NOTICE-PACKAGE-QUALIFICATION.md](NOTICE-PACKAGE-QUALIFICATION.md). Do not turn
+`coverage=incomplete` into `reviewed-complete` automatically: qa6 has an explicit
+review, digest-bound input, retained sources and positive artifact verification.
 
 ## Qualified bytes
 
@@ -66,7 +68,7 @@ notices when API access was rate limited. In particular russh-util `0.52.0` uses
 `LICENSE-2.0.txt` at `3d09c20c52a542ffa327723d3a44cb1edd9b0ca4`, not the
 different latest license filename.
 
-Still unresolved:
+Findings at the initial audit handoff (resolved or bounded explicitly by the qa6 review):
 
 - enum-assoc `1.4.1`, exact revision
   `351b306939b150601451df752a183b077b0de85a`: MIT OR Apache-2.0 metadata, but no raw

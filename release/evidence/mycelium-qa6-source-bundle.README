@@ -1,0 +1,57 @@
+fungOS Mycelium-only qualification6 source bundle
+================================================
+
+This bundle is an aggregate. Each component retains its own license. fungOS
+first-party code is MIT OR Apache-2.0; this is not a blanket license for Debian,
+firmware, native libraries, compiler sources, or other dependencies.
+
+Source directories:
+  fungos              clean source 41ea743063f0bd9d7018f08227043bef47b03ba7
+  mycelium            clean executable source 10a3c18ebea8b9f3f7be981657957ac10a5a2f16
+  mycelium-packager    clean packager source f0980fba00412ed0772effc9a80d2d2446f3108b
+  debian              587 exact source/version closures; DSCs and all SHA256 files
+  debian-media-notices package-owned copyright/common-license texts from media
+  debian-logo         original open-use SVG and separate upstream logo notices
+  ubuntu-native       authenticated exact Zig and LLVM header source closures
+  cargo-vendor        all 500 exact Cargo.lock registry source versions
+  rust-library        actual Rust 1.98.1 library and compiler-builtins sources
+  rust-notices        exact Rust library/toolchain attribution documents
+  rust-llvm-libunwind  exact LLVM submodule 52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04
+  zig-runtime         materialized Zig 0.14.1 native runtime/include sources
+  mycelium-notices    reviewed conservative notices, inventory and artifact binding
+
+The vendor closure intentionally retains upstream tests and fixtures. Keys in
+upstream cryptography tests are source fixtures, not fungOS fleet identities.
+No enrolled guest disk, runtime claim, authority, private operator credentials or
+fleet state is included. Source directories may contain extra target/build-only
+code: availability is not evidence that such code is linked into the executable.
+
+Manual build/runbook
+--------------------
+Use Linux with Rust 1.98.1, cargo-zigbuild 0.23.4 and Zig 0.14.1. Debian ISO
+construction additionally needs xorriso and the tools listed in installer/README.md.
+Build the executable from mycelium/ with its locked dependencies; to use the
+included vendor source, pass Cargo configuration for source.crates-io.replace-with
+and source.vendored-sources.directory pointing to the adjacent cargo-vendor/.
+
+  cargo zigbuild --locked --release --target x86_64-unknown-linux-musl \
+    -p mycelium-cli --features iroh-sync
+
+Read mycelium-packager/packaging/linux/README.md. Set
+MYCELIUM_PACKAGER_SOURCE_COMMIT=f0980fba00412ed0772effc9a80d2d2446f3108b while
+compiling that packager. Notice-only packaging of the retained qa5 executable
+uses artifact version 0.1.0+qualification6 and executable source 10a3c18...,
+with --third-party-notices pointing to mycelium-notices/. The executable's hash
+is unchanged; the newer packager revision is recorded separately. If rebuilding
+changes executable bytes, this notice binding must not be reused blindly.
+
+Follow fungos/installer/build.sh and its component-bundle verifier using the
+verified Debian 13.1.0 amd64 netinst input. Its required upstream SHA256 is
+658b28e209b578fe788ec5867deebae57b6aac5fce3692bbb116bab9c65568b3.
+The explicit mycelium-qualification mode is not a full Unibus/Canvas edge image.
+
+SHA256SUMS binds every regular file in this bundle. Internal inventories bind
+Debian/Ubuntu exact source versions and individual notices. This source bundle
+does not contain release-signing keys and is not itself a signed release.
+Publication still requires authenticated release metadata and publicly available
+sources/notices. Engineering coverage is reviewed; legal clearance is not asserted.
