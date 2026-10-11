@@ -1,6 +1,9 @@
 # QA6 torrent handoff
 
-Prepared locally on 2026-10-10. Not signed, uploaded or seeded. These are the
+Initial local preparation recorded on 2026-10-10. Subsequent signed public
+delivery and HTTPS-webseed torrent variants are recorded in
+[PUBLIC-QUALIFICATION.md](PUBLIC-QUALIFICATION.md); the original trackerless
+torrents below remain preparation evidence. These are the
 Mycelium-only amd64 qualification artifacts, **not fungOS v0.1.0 or a full edge
 image**. Fresh BIOS and UEFI installation and corresponding-source coverage are
 recorded in [NOTICE-PACKAGE-QUALIFICATION.md](NOTICE-PACKAGE-QUALIFICATION.md).

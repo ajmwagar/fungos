@@ -1,5 +1,9 @@
 # fungOS release preparation and torrent distribution
 
+The narrow Mycelium-only QA6 installer now has signed public downloads and
+HTTPS-webseed torrents. See [PUBLIC-QUALIFICATION.md](PUBLIC-QUALIFICATION.md)
+for exact delivery evidence and limitations; this is not a full v0.1 release.
+
 Release preparation stages boot-tested image bytes and corresponding source,
 then asks upstream Transmission to create public, single-file torrents. It does
 not publish files, start a seed service, sign metadata, or enable automatic

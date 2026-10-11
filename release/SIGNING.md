@@ -26,8 +26,11 @@ source, logs, OpenTofu state, a serving host or an object-storage bucket.
 A passphrase-protected secret-key export and a revocation certificate are kept
 in `~/.local/share/fpl-release-signing/fungos-recovery`, mode 0700, with files
 mode 0600. **This same-machine recovery copy is not an off-device backup.**
+The export was restored into an isolated temporary key home and successfully
+signed an inventory; that temporary restored key home was removed afterward.
 Before routine unattended production signing, retain the recovery materials
-and passphrase in an independently secured off-device backup and test recovery.
+and passphrase in an independently secured off-device backup and test that
+off-device recovery path.
 The certification key is not yet moved offline; hardware-backed custody and
 CI/Fab admission are not claimed by this initial setup.
 
