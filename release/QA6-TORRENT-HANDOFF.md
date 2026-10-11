@@ -20,7 +20,18 @@ Transmission 4.1.1 generated and parsed both single-file torrents. They use
 and no creator or creation-time metadata. The public-torrent flag permits a
 future public swarm; it does not mean a swarm is currently running. Both
 payload SHA-256 hashes were independently rechecked after generation and match
-the qualified artifacts. A final-image two-client download has **not** been
+the qualified artifacts. Transmission subsequently verified every piece of
+both exact torrents against those payloads: both reported `Percent Done: 100%`,
+`State: Stopped`, zero connected peers and no uploaded/downloaded bytes. The
+daemon ran in a fresh network namespace with only loopback, DHT/LPD/port mapping
+disabled and loopback-only RPC; it exited cleanly after verification. The raw
+report is retained in `evidence/mycelium-qa6-transmission-piece-verification.txt`.
+Report SHA-256:
+`da074acebd7b3191dfbf5dc29d5622ba60bee1d927f7d6740afe3dc3d2d98857`.
+Its private runtime state remains at
+`torrents/verify-state.ksLT5e/` beneath the Agora artifact directory.
+This verifies local payload pieces, **not** a transfer or public availability.
+A final-image two-client download has **not** been
 performed; the earlier isolated synthetic transfer is separate evidence in
 [TORRENT-QUALIFICATION.md](TORRENT-QUALIFICATION.md).
 

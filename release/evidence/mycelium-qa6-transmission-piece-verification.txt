@@ -1,0 +1,84 @@
+NAME
+  Id: 1
+  Name: fungos-mycelium-qualification6-amd64.iso
+  Hash: 020aa0817773245d1ebd9247b4d47bbfda0ed1e9
+  Magnet: magnet:?xt=urn:btih:020aa0817773245d1ebd9247b4d47bbfda0ed1e9&dn=fungos-mycelium-qualification6-amd64.iso
+  Labels: 
+
+TRANSFER
+  State: Stopped
+  Location: /home/ajmwagar/.cache/fungos-notice-qa6.lzDJzr
+  Sequential Download: No
+  Sequential Download from piece: 0
+  Percent Done: 100%
+  ETA: 0 seconds (0 seconds)
+  Download Speed: 0 B/s
+  Upload Speed: 0 B/s
+  Have: 833.9 MB (833.9 MB verified)
+  Availability: 100%
+  Total size: 833.9 MB (833.9 MB wanted)
+  Downloaded: None
+  Uploaded: None
+  Ratio: 0.00
+  Peers: connected to 0, uploading to 0, downloading from 0
+
+HISTORY
+  Date added:       Sat Oct 10 18:38:17 2026
+  Date finished:    Sat Oct 10 18:38:17 2026
+
+ORIGINS
+  Public torrent: Yes
+  Piece Count: 796
+  Piece Size: 1 MiB
+
+LIMITS & BANDWIDTH
+  Download Limit: Unlimited
+  Upload Limit: Unlimited
+  Ratio Limit: Default
+  Idle Limit: Default
+  Honors Session Limits: Yes
+  Peer limit: 50
+  Bandwidth Priority: Normal
+
+NAME
+  Id: 2
+  Name: fungos-mycelium-qa6-sources.tar.zst
+  Hash: c42a6334d7b1ad840e6f5fd258164dba03d5a6fb
+  Magnet: magnet:?xt=urn:btih:c42a6334d7b1ad840e6f5fd258164dba03d5a6fb&dn=fungos-mycelium-qa6-sources.tar.zst
+  Labels: 
+
+TRANSFER
+  State: Stopped
+  Location: /home/ajmwagar/.cache/fungos-notice-qa6.lzDJzr
+  Sequential Download: No
+  Sequential Download from piece: 0
+  Percent Done: 100%
+  ETA: 0 seconds (0 seconds)
+  Download Speed: 0 B/s
+  Upload Speed: 0 B/s
+  Have: 3.27 GB (3.27 GB verified)
+  Availability: 100%
+  Total size: 3.27 GB (3.27 GB wanted)
+  Downloaded: None
+  Uploaded: None
+  Ratio: 0.00
+  Peers: connected to 0, uploading to 0, downloading from 0
+
+HISTORY
+  Date added:       Sat Oct 10 18:38:17 2026
+  Date finished:    Sat Oct 10 18:38:17 2026
+
+ORIGINS
+  Public torrent: Yes
+  Piece Count: 3120
+  Piece Size: 1 MiB
+
+LIMITS & BANDWIDTH
+  Download Limit: Unlimited
+  Upload Limit: Unlimited
+  Ratio Limit: Default
+  Idle Limit: Default
+  Honors Session Limits: Yes
+  Peer limit: 50
+  Bandwidth Priority: Normal
+
