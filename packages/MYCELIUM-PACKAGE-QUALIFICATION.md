@@ -186,3 +186,51 @@ read-only inspection loops were detached.
 The private proof's readiness check now requires a successful daemon RPC:
 `daemon status` is informational and may exit successfully for “not running.”
 This fixes a test-harness restart race, not a claimed daemon runtime defect.
+
+## Personal access gate: passed on corrected installer, 2026-10-10
+
+The ancestor ownership issue was confirmed in an actual installer-produced
+disk, not only the old fixture. The shared overlay installation fix `b63a4e1`
+produced a new ISO, SHA-256
+`601a631bb41cd93ef091e9b6a38b25d09bb49395a036f0bf668053dc9bde0b5c`.
+Its freshly installed UEFI disk was audited with root-owned `0755` ancestors,
+then enrolled using an isolated private authority through the real first-contact
+sandbox and rebooted before being cloned for this access test. No broad target
+ownership repair, production authority or production identity was used.
+
+Private `access-final-pass` booted that clone natively with no NIC, external
+kernel or ISO attached. The genuine source `10a3c18`/qualification5 owner package
+and executable hashes are recorded above. The public CLI issued grants and
+certificates, reconciled host policy and created the mapped account. Under the
+test unit's `UMask=0077`, an intentional mode-only `0700` policy drift was repaired
+by another public reconciliation. The retained journal verifies:
+
+- Peer enrollment alone supplied no personal account or SSH access.
+- The allowed mapped user authenticated with an actual `ED25519-CERT`, as
+  recorded by sshd. The exact same private key without a certificate was denied.
+- No privileged group membership or noninteractive sudo access was granted.
+- A same-CA unmapped principal and a different role were denied.
+- Signed grant revocation plus reconciliation rejected the previously allowed
+  certificate through the installed KRL.
+
+The client permits the underlying Ed25519 private-key algorithm because OpenSSH
+needs it to sign the certificate. Filtering that algorithm out had prevented
+the client from finding its private signer; that earlier harness failure is not
+a product defect. Actual server certificate acceptance and same-key raw denial
+are required instead. Password, keyboard-interactive, SSH-agent and unrelated
+identity fallback remain disabled, and the server host key is pinned.
+
+Proof source `e26ef27`, executable SHA-256
+`7068eaa9cc3001cd324df52a23c48faba5d8136727f9d81f48a6a0a00e09b248`:
+
+| Retained evidence under Agora `fungos-package-proof.yiSXTq` | SHA-256 |
+| --- | --- |
+| `access-final-pass-qualification.journal` | `9c036ee379e9e464c1b44cad7828a37e54f54cf45982ba346ad20e472679b8bc` |
+| `access-final-pass/boot.log` | `12e7a0678f922e5bf8f7355528eb52d9033424b5a9736cfb0e277789210679f3` |
+| Private `passed` receipt | `6b944d379660eb7af46bbbde3f845c22488483a7f922acca0e042bad2643f57f` |
+
+QEMU powered off cleanly with exit 0; all owned read-only inspection loops were
+detached. This qualifies the stated personal SSH behavior for these exact
+candidate bytes, not live-fleet deployment, general sudo management, or an
+unlimited-authority denial test: an authorized CA can intentionally mint an
+accepted mapped role principal.
