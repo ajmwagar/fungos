@@ -51,8 +51,17 @@ collection, then exact Debian Installer, bogl and libdebian-installer archives.
 The initial unresolved-binary list is not evidence that those sources are absent.
 Its false missing entries are superseded by the signed-index identity resolution.
 
-Current release preparation is explicitly incomplete: the final rebuilt image's
-inventory must be reconciled, raw bootloader/firmware coverage and notices audited,
+The corrected candidate ISO SHA-256
+`601a631bb41cd93ef091e9b6a38b25d09bb49395a036f0bf668053dc9bde0b5c`
+and freshly installed UEFI inventory SHA-256
+`d055de76fe467b863efa66fb8b3ce75a8c2ffb17e687a3a096ea4ad7fba7db5a`
+were independently enumerated and resolved against the authenticated source
+indexes. Their unique source/version set matches the collected 425 pairs exactly.
+This covers Debian package and installer-initrd source identities; it does not
+establish completeness for every raw media file or the Mycelium executable.
+
+Current release preparation is explicitly incomplete: raw bootloader/firmware
+coverage and notices must be audited,
 and the owner toolchain/native-source closure completed. Actual archives are
 retained privately on the approved build host;
 no public source bundle or release torrent is approved by this note.
