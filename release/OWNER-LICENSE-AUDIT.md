@@ -109,6 +109,15 @@ boundary is ambiguous. Such a scanner still does not prove legal completeness.
 Runtime-only selection and the documented declaration-only exceptions remain
 explicit engineering review findings; no package has been marked reviewed-complete.
 
+v5 completed the same 500 checks and 30,033 records/11,941 notices (157 MiB).
+The final compact collection was generated from the **original full v4 evidence**,
+not the earlier extracted v5 files, so later file-local notices remain detectable.
+It retains 11,941 notice files (103 MiB), under
+`mycelium-owner-notices-compact-v1`; `compact-inventory.tsv` SHA256 is
+`67b7bfea18ba0d0b6737cd6f929e7fda1843ec4a70b9295d08f6a1a34f01c92b`.
+This finite collection is source/audit evidence, not a reviewed lean runtime-only
+payload. No refreshed ISO or positive notice-bearing package test was performed.
+
 ## Generic notice input and runbook
 
 `notice-input` stages only raw notice-named files, preserving exact contents and
@@ -136,6 +145,12 @@ conservative toolchain-wide notices), inventory SHA256
 `8471f202f207f00bb00e08820928f33b62fe9d7c2acb6a431c7f5c124ca62304`.
 Its `coverage=incomplete` must be rejected. Runtime-only selection should be
 reviewed to avoid implying every compiler license applies to the executable.
+The generic owner packager actually rejected this input before output creation;
+that negative gate does not substitute for a positive fully reviewed package test.
+
+Input traversal and hashes are now validated before collection output creation;
+later I/O failure can leave evidence files, but metadata is emitted last and
+always incomplete. Captured output bytes are rehashed against pre-copy hashes.
 
 Cheap validation used the existing Agora release workspace: cargo check, seven
 focused unit tests across the three tools, then release builds and real inventory
