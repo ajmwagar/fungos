@@ -98,6 +98,7 @@ fn grant(name: &str, role: &str, user: &str, serial: u64, now: u64) -> Result<()
 }
 fn ssh(name: &str, certificate: Option<&str>, command: &str) -> Result<Output> {
     let mut args = vec![
+        "-vvv".to_owned(),
         "-F".to_owned(),
         "/dev/null".into(),
         "-o".into(),
@@ -116,8 +117,6 @@ fn ssh(name: &str, certificate: Option<&str>, command: &str) -> Result<Output> {
         "KbdInteractiveAuthentication=no".into(),
         "-o".into(),
         "PreferredAuthentications=publickey".into(),
-        "-o".into(),
-        "PubkeyAcceptedAlgorithms=ssh-ed25519-cert-v01@openssh.com".into(),
         "-o".into(),
         "ConnectTimeout=5".into(),
         "-i".into(),
@@ -311,6 +310,21 @@ fn proof() -> Result<()> {
         )?;
     }
     let groups = run("id", &["-nG", "qaallowed"])?;
+    let accepted = run(
+        "journalctl",
+        &["-b", "0", "--no-pager", "-u", "ssh.service"],
+    )?;
+    require(
+        accepted.lines().any(|line| {
+            line.contains("Accepted publickey for qaallowed") && line.contains("ED25519-CERT")
+        }),
+        "server did not record certificate authentication",
+    )?;
+    // OpenSSH needs the underlying private-key algorithm enabled to sign a
+    // certificate. Prove raw-key fallback cannot succeed using the exact same
+    // private key under a basename with no automatically discovered cert.
+    private(&p("allowed-raw"), &fs::read(p("allowed"))?)?;
+    denied(ssh("allowed-raw", None, "id -un")?)?;
     require(
         !groups
             .split_whitespace()
