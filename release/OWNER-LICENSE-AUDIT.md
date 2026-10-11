@@ -69,7 +69,7 @@ different latest license filename.
 Still unresolved:
 
 - enum-assoc `1.4.1`, exact revision
-  `351b306939b150601451df752a183b077b0de85a`: MIT metadata, but no raw
+  `351b306939b150601451df752a183b077b0de85a`: MIT OR Apache-2.0 metadata, but no raw
   license/copyright notice found in the exact upstream root or source headers.
 - pharos `0.5.3`, exact revision
   `f5b985a59cfeced5ae66325d477b6c982c9408bf`: README declares Unlicense,
@@ -80,6 +80,21 @@ Still unresolved:
 - Matching Ubuntu LLVM20 source-package closure needs retention/verification.
 - Raw notice payload must accompany independently downloadable `.deb` and ISO.
   A private cache or separately linked source archive does not prove this.
+
+The exact Cargo and README declarations for those two crates are retained in
+`mycelium-declaration-notices`, alongside SPDX license-list-data `v3.28.0` standard
+MIT/Apache-2.0/Unlicense texts clearly labelled **supplements**, not upstream
+LICENSE files. Author metadata is retained as metadata, not invented copyright
+ownership. Full fetched git history contained no LICENSE/COPYING path for either
+repository. These are documented evidence exceptions requiring explicit review,
+not permission to fabricate missing statements.
+
+Follow-up v4 collection retains an entire original source file as a `.NOTICE`
+when its first 8 KiB contains copyright, SPDX identifier, grant or redistribution
+markers. It does not guess/truncate an ambiguous comment boundary. This is a
+conservative attribution evidence set, not a claim that every textual marker is
+a binary license obligation; the compiler-wide and inactive dependencies must
+remain distinguishable during runtime notice-payload review.
 
 ## Generic notice input and runbook
 

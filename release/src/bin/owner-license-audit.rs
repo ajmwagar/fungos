@@ -4,7 +4,7 @@
 use std::{
     collections::BTreeMap,
     fs,
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -103,6 +103,22 @@ fn notice(path: &Path) -> bool {
     .iter()
     .any(|v| name.contains(v))
 }
+fn attribution_header(path: &Path) -> Result<bool> {
+    let mut prefix = Vec::new();
+    fs::File::open(path)?.take(8192).read_to_end(&mut prefix)?;
+    let Ok(text) = std::str::from_utf8(&prefix) else {
+        return Ok(false);
+    };
+    let text = text.to_ascii_lowercase();
+    Ok([
+        "copyright",
+        "spdx-license-identifier",
+        "permission is hereby granted",
+        "redistribution and use",
+    ]
+    .iter()
+    .any(|marker| text.contains(marker)))
+}
 fn files(root: &Path, here: &Path, output: &mut Vec<PathBuf>) -> Result<()> {
     for entry in fs::read_dir(here)? {
         let entry = entry?;
@@ -136,6 +152,25 @@ fn collect(
             let destination = output.join("notices").join(label).join(&relative);
             fs::create_dir_all(destination.parent().ok_or("parent")?)?;
             fs::copy(root.join(&relative), destination)?;
+            count += 1;
+        } else if attribution_header(&root.join(&relative))? {
+            // Retain the entire original file rather than truncating an ambiguous
+            // header or inventing its boundary. This is conservative evidence,
+            // not a statement that every detected string is a legal obligation.
+            let retained = PathBuf::from("source-attributions")
+                .join(&relative)
+                .with_extension(format!(
+                    "{}.NOTICE",
+                    relative.extension().unwrap_or_default().to_string_lossy()
+                ));
+            let destination = output.join("notices").join(label).join(&retained);
+            fs::create_dir_all(destination.parent().ok_or("parent")?)?;
+            fs::copy(root.join(&relative), destination)?;
+            inventory.push_str(&format!(
+                "{label}\t{}\t{}\n",
+                retained.display(),
+                digest(&root.join(&relative))?
+            ));
             count += 1;
         }
         if all_hashes || notice(&relative) {
@@ -300,6 +335,11 @@ mod tests {
             assert!(!safe_relative(bad));
         }
         assert!(safe_relative("src/file.rs"));
+    }
+    #[test]
+    fn notice_selection_preserves_filename_notices() {
+        assert!(notice(Path::new("LICENSE-MIT")));
+        assert!(!notice(Path::new("source.rs")));
     }
     #[test]
     fn lock_ignores_workspace_and_rejects_bad_checksum() {
