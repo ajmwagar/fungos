@@ -66,28 +66,55 @@ fn control(data: &str) -> Result<Vec<(String, String)>> {
 fn built_using(data: &str) -> Result<BTreeSet<(String, String)>> {
     let mut required = BTreeSet::new();
     for stanza in data.split("\n\n") {
-        if stanza.lines().any(|line|line.starts_with("Status: ") && line != "Status: install ok installed") {continue;}
+        if stanza
+            .lines()
+            .any(|line| line.starts_with("Status: ") && line != "Status: install ok installed")
+        {
+            continue;
+        }
         let mut field = String::new();
         let mut active = false;
         for line in stanza.lines().chain(std::iter::once("")) {
-            if active && line.starts_with([' ', '\t']) { field.push(' '); field.push_str(line.trim()); continue; }
+            if active && line.starts_with([' ', '\t']) {
+                field.push(' ');
+                field.push_str(line.trim());
+                continue;
+            }
             if active {
                 for dependency in field.split(',').map(str::trim) {
-                    let (name, revision) = dependency.split_once(" (= ").ok_or("nonexact Built-Using source")?;
-                    let revision = revision.strip_suffix(')').ok_or("malformed Built-Using source")?;
-                    if !identity(name) || !identity(revision) { return Err("unsafe Built-Using source".into()); }
+                    let (name, revision) = dependency
+                        .split_once(" (= ")
+                        .ok_or("nonexact Built-Using source")?;
+                    let revision = revision
+                        .strip_suffix(')')
+                        .ok_or("malformed Built-Using source")?;
+                    if !identity(name) || !identity(revision) {
+                        return Err("unsafe Built-Using source".into());
+                    }
                     required.insert((name.to_owned(), revision.to_owned()));
                 }
                 field.clear();
             }
-            let value = line.strip_prefix("Built-Using: ").or_else(||line.strip_prefix("Static-Built-Using: "));
-            active = value.is_some_and(|v|!v.is_empty());
-            if let Some(value)=value {field.push_str(value);}
+            let value = line
+                .strip_prefix("Built-Using: ")
+                .or_else(|| line.strip_prefix("Static-Built-Using: "));
+            active = value.is_some_and(|v| !v.is_empty());
+            if let Some(value) = value {
+                field.push_str(value);
+            }
         }
     }
     Ok(required)
 }
-fn status_origin(status:Option<&str>)->Option<&'static str>{match status {Some("install ok installed")=>Some("installed-status"),Some(value) if value.ends_with(" ok config-files")=>Some("retained-config-source-conservative"),_=>None}}
+fn status_origin(status: Option<&str>) -> Option<&'static str> {
+    match status {
+        Some("install ok installed") => Some("installed-status"),
+        Some(value) if value.ends_with(" ok config-files") => {
+            Some("retained-config-source-conservative")
+        }
+        _ => None,
+    }
+}
 fn media(directory: &Path, output: &mut BTreeSet<(String, String, String)>) -> Result<()> {
     for entry in fs::read_dir(directory)? {
         let entry = entry?;
@@ -120,7 +147,9 @@ fn media(directory: &Path, output: &mut BTreeSet<(String, String, String)>) -> R
             for (name, revision) in records {
                 output.insert((name, revision, "iso-package".into()));
             }
-            for (name,revision) in built_using(&data)? {output.insert((name,revision,"iso-built-using".into()));}
+            for (name, revision) in built_using(&data)? {
+                output.insert((name, revision, "iso-built-using".into()));
+            }
         }
     }
     Ok(())
@@ -162,7 +191,9 @@ fn inventory(
     for (name, revision) in control(&fs::read_to_string(initrd_status)?)? {
         required.insert((name, revision, "installer-initrd".into()));
     }
-    for (name,revision) in built_using(&fs::read_to_string(initrd_status)?)? {required.insert((name,revision,"installer-built-using".into()));}
+    for (name, revision) in built_using(&fs::read_to_string(initrd_status)?)? {
+        required.insert((name, revision, "installer-built-using".into()));
+    }
     if required.is_empty() {
         return Err("empty Debian source requirements".into());
     }
@@ -209,11 +240,15 @@ fn fetch(
     // Current installed snapshot plus the upstream13.1 netinst release window.
     // Exact source versions are selected from authenticated indexes, never latest.
     for snapshot in BTreeSet::from([snapshot, installer_snapshot]) {
-        let archives: &[(&str,&str)] = if unstable {&[("debian","sid")]} else {&[
-            ("debian", "trixie"),
-            ("debian", "trixie-updates"),
-            ("debian-security", "trixie-security"),
-        ]};
+        let archives: &[(&str, &str)] = if unstable {
+            &[("debian", "sid")]
+        } else {
+            &[
+                ("debian", "trixie"),
+                ("debian", "trixie-updates"),
+                ("debian-security", "trixie-security"),
+            ]
+        };
         for (archive, suite) in archives {
             sources.push_str(&format!("deb-src [signed-by={}] https://snapshot.debian.org/archive/{archive}/{snapshot}/ {suite} main contrib non-free-firmware\n", key.display()));
         }
@@ -329,15 +364,29 @@ fn main() -> Result<()> {
 // The installer's compact status often omits Source. Resolve those binaries
 // against the authenticated source indexes retained by our isolated APT fetch.
 fn resolve_initrd(requirements: &Path, lists: &Path, output: &Path) -> Result<()> {
-    if output.exists() { return Err("refusing existing resolved requirements".into()); }
+    if output.exists() {
+        return Err("refusing existing resolved requirements".into());
+    }
     let mut mappings = BTreeSet::new();
     for entry in fs::read_dir(lists)? {
         let entry = entry?;
-        if !entry.file_type()?.is_file() || !entry.file_name().to_string_lossy().contains("Sources") { continue; }
-        let data = run("/usr/lib/apt/apt-helper", &["cat-file".into(), entry.path().to_str().ok_or("non UTF8 index")?.into()], None)?;
+        if !entry.file_type()?.is_file() || !entry.file_name().to_string_lossy().contains("Sources")
+        {
+            continue;
+        }
+        let data = run(
+            "/usr/lib/apt/apt-helper",
+            &[
+                "cat-file".into(),
+                entry.path().to_str().ok_or("non UTF8 index")?.into(),
+            ],
+            None,
+        )?;
         for stanza in data.split("\n\n") {
             let field = |name: &str| folded_field(stanza, name);
-            if let (Some(name), Some(version), Some(binaries)) = (field("Package"), field("Version"), field("Binary")) {
+            if let (Some(name), Some(version), Some(binaries)) =
+                (field("Package"), field("Version"), field("Binary"))
+            {
                 for binary in binaries.split(',').map(str::trim) {
                     mappings.insert((binary.to_owned(), version.to_owned(), name.to_owned()));
                 }
@@ -347,35 +396,69 @@ fn resolve_initrd(requirements: &Path, lists: &Path, output: &Path) -> Result<()
     let mut resolved = BTreeSet::new();
     for line in fs::read_to_string(requirements)?.lines() {
         let fields: Vec<_> = line.split('\t').collect();
-        if fields.len() != 3 { return Err("requirements must have three fields".into()); }
-        if fields[0] == "mycelium" { continue; } // Separate owner source closure.
-        if fields[2] != "installer-initrd" { resolved.insert(line.to_owned()); continue; }
+        if fields.len() != 3 {
+            return Err("requirements must have three fields".into());
+        }
+        if fields[0] == "mycelium" {
+            continue;
+        } // Separate owner source closure.
+        if fields[2] != "installer-initrd" {
+            resolved.insert(line.to_owned());
+            continue;
+        }
         // Audited Debian d-i20250803+deb13u1 build/Makefile609-611 emits
         // targetstring-BUILD_DATE; debian/rules derives DATE from changelog
         // VERSION and passes it as BUILD_DATE. This one observed ISO target
         // is admitted ONLY if that exact suffix also exists in signed Sources.
         let version = if fields[0] == "debian-installer" {
-            audited_installer_version(fields[1]).ok_or("unrecognized/unaudited installer build marker")?
-        } else { bin_nmu_source_version(fields[1]) };
-        let names: BTreeSet<_> = mappings.iter().filter(|(binary, revision, _)| binary == fields[0] && revision == version).map(|(_, _, name)| name).collect();
-        if names.len() != 1 { return Err(format!("unresolved/ambiguous initrd source {} {}", fields[0], fields[1]).into()); }
-        resolved.insert(format!("{}\t{version}\tinstaller-initrd", names.first().unwrap()));
+            audited_installer_version(fields[1])
+                .ok_or("unrecognized/unaudited installer build marker")?
+        } else {
+            bin_nmu_source_version(fields[1])
+        };
+        let names: BTreeSet<_> = mappings
+            .iter()
+            .filter(|(binary, revision, _)| binary == fields[0] && revision == version)
+            .map(|(_, _, name)| name)
+            .collect();
+        if names.len() != 1 {
+            return Err(format!(
+                "unresolved/ambiguous initrd source {} {}",
+                fields[0], fields[1]
+            )
+            .into());
+        }
+        resolved.insert(format!(
+            "{}\t{version}\tinstaller-initrd",
+            names.first().unwrap()
+        ));
     }
-    fs::write(output, resolved.into_iter().collect::<Vec<_>>().join("\n") + "\n")?;
+    fs::write(
+        output,
+        resolved.into_iter().collect::<Vec<_>>().join("\n") + "\n",
+    )?;
     Ok(())
 }
 fn bin_nmu_source_version(version: &str) -> &str {
     match version.rsplit_once("+b") {
-        Some((source, suffix)) if !suffix.is_empty() && suffix.bytes().all(|b| b.is_ascii_digit()) => source,
+        Some((source, suffix))
+            if !suffix.is_empty() && suffix.bytes().all(|b| b.is_ascii_digit()) =>
+        {
+            source
+        }
         _ => version,
     }
 }
 fn folded_field(stanza: &str, name: &str) -> Option<String> {
     let prefix = format!("{name}: ");
     let mut lines = stanza.lines();
-    let mut value = lines.find_map(|line| line.strip_prefix(&prefix)).map(str::to_owned)?;
+    let mut value = lines
+        .find_map(|line| line.strip_prefix(&prefix))
+        .map(str::to_owned)?;
     for line in lines {
-        if !line.starts_with([' ', '\t']) { break; }
+        if !line.starts_with([' ', '\t']) {
+            break;
+        }
         value.push(' ');
         value.push_str(line.trim());
     }
@@ -383,33 +466,64 @@ fn folded_field(stanza: &str, name: &str) -> Option<String> {
 }
 fn audited_installer_version(marker: &str) -> Option<&str> {
     // Deliberately not a heuristic for future daily/custom installer builds.
-    matches!(marker, "cdrom-isolinux-20250803+deb13u1" | "cdrom-gtk-20250803+deb13u1")
-        .then_some("20250803+deb13u1")
+    matches!(
+        marker,
+        "cdrom-isolinux-20250803+deb13u1" | "cdrom-gtk-20250803+deb13u1"
+    )
+    .then_some("20250803+deb13u1")
 }
 #[cfg(test)]
 mod tests {
     #[test]
     fn status_classification_does_not_call_residual_configs_installed() {
-        assert_eq!(super::status_origin(Some("install ok installed")),Some("installed-status"));
-        assert_eq!(super::status_origin(Some("deinstall ok config-files")),Some("retained-config-source-conservative"));
-        assert_eq!(super::status_origin(Some("purge ok not-installed")),None);
+        assert_eq!(
+            super::status_origin(Some("install ok installed")),
+            Some("installed-status")
+        );
+        assert_eq!(
+            super::status_origin(Some("deinstall ok config-files")),
+            Some("retained-config-source-conservative")
+        );
+        assert_eq!(super::status_origin(Some("purge ok not-installed")), None);
     }
     #[test]
     fn includes_exact_folded_built_using() {
         assert_eq!(super::built_using("Built-Using: linux (= 6.12.38-1),\n font (= 2:1)\nStatic-Built-Using: libc (= 3)\n").unwrap(), std::collections::BTreeSet::from([("linux".into(),"6.12.38-1".into()),("font".into(),"2:1".into()),("libc".into(),"3".into())]));
         assert!(super::built_using("Built-Using: foo (>= 1)\n").is_err());
-        assert!(super::built_using("Status: deinstall ok config-files\nBuilt-Using: linux (= 1)\n").unwrap().is_empty());
+        assert!(super::built_using(
+            "Status: deinstall ok config-files\nBuilt-Using: linux (= 1)\n"
+        )
+        .unwrap()
+        .is_empty());
     }
     #[test]
     fn admits_only_audited_installer_marker() {
-        assert_eq!(super::audited_installer_version("cdrom-isolinux-20250803+deb13u1"), Some("20250803+deb13u1"));
-        assert_eq!(super::audited_installer_version("cdrom-gtk-20250803+deb13u1"), Some("20250803+deb13u1"));
-        assert_eq!(super::audited_installer_version("netboot-20250803+deb13u1"), None);
-        assert_eq!(super::audited_installer_version("cdrom-isolinux-20261010"), None);
+        assert_eq!(
+            super::audited_installer_version("cdrom-isolinux-20250803+deb13u1"),
+            Some("20250803+deb13u1")
+        );
+        assert_eq!(
+            super::audited_installer_version("cdrom-gtk-20250803+deb13u1"),
+            Some("20250803+deb13u1")
+        );
+        assert_eq!(
+            super::audited_installer_version("netboot-20250803+deb13u1"),
+            None
+        );
+        assert_eq!(
+            super::audited_installer_version("cdrom-isolinux-20261010"),
+            None
+        );
     }
     #[test]
     fn retains_folded_binary_names_in_signed_source_indexes() {
-        assert_eq!(super::folded_field("Package: linux\nBinary: headers,\n ata-modules, kernel\nVersion: 1\n", "Binary"), Some("headers, ata-modules, kernel".into()));
+        assert_eq!(
+            super::folded_field(
+                "Package: linux\nBinary: headers,\n ata-modules, kernel\nVersion: 1\n",
+                "Binary"
+            ),
+            Some("headers, ata-modules, kernel".into())
+        );
     }
     #[test]
     fn strips_only_final_numeric_bin_nmu() {

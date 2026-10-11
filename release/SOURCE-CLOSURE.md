@@ -57,11 +57,20 @@ and freshly installed UEFI inventory SHA-256
 `d055de76fe467b863efa66fb8b3ce75a8c2ffb17e687a3a096ea4ad7fba7db5a`
 were independently enumerated and resolved against the authenticated source
 indexes. Their unique source/version set matches the collected 425 pairs exactly.
-This covers Debian package and installer-initrd source identities; it does not
-establish completeness for every raw media file or the Mycelium executable.
+This original comparison covered the text installer only. The wider audit
+subsequently included graphical/Xen initrds, exact media/installed
+Built-Using/Static-Built-Using dependencies, conservative residual-config
+sources, and raw boot/artwork sources. **587 unique source/version closures**
+are now retained, with every DSC-referenced file checked for SHA-256 and length.
+Raw boot executable bindings, hybrid system-area exceptions, all 17 artwork
+files and the reproduced SVG splash are documented in
+[MEDIA-LICENSE-COVERAGE.md](MEDIA-LICENSE-COVERAGE.md). That report also records
+retained notices for all 791 media archive occurrences and 36 firmware packages.
 
-Current release preparation is explicitly incomplete: raw bootloader/firmware
-coverage and notices must be audited,
-and the owner toolchain/native-source closure completed. Actual archives are
+The remaining complete-release gate is assembling the separately audited
+owner source/native-runtime/notices section with this verified Debian section
+and recording final source-bundle hashes and authorized release signatures.
+The Debian source archive staging contains 1758 verified files; it is not
+misrepresented as the complete combined source bundle. Actual archives are
 retained privately on the approved build host;
 no public source bundle or release torrent is approved by this note.
