@@ -1,5 +1,10 @@
 # Private torrent-tool qualification
 
+The exact boot-qualified QA6 image and complete source archive now have locally
+prepared torrents; see [QA6-TORRENT-HANDOFF.md](QA6-TORRENT-HANDOFF.md). They are
+not signed, published or seeded. The transfer evidence below is synthetic,
+not a download test of those final payloads.
+
 On 2026-10-10, the ignored `loopback_download` integration test transferred
 8,388,608 synthetic bytes from one Transmission 4.1.1 client to a second,
 initially empty client. The received SHA-256 was
